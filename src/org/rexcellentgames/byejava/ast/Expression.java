@@ -2,6 +2,8 @@ package org.rexcellentgames.byejava.ast;
 
 import org.rexcellentgames.byejava.scanner.TokenType;
 
+import java.util.ArrayList;
+
 public class Expression extends Ast {
 	public static class Literal extends Expression {
 		public Object value;
@@ -128,28 +130,55 @@ public class Expression extends Ast {
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			tabs = this.from.emit(builder, tabs);
-			builder.append('.');
+			builder.append('.').append(this.field).append(" = ");
 			tabs = this.to.emit(builder, tabs);
-			builder.append(" = ").append(this.field);
-
 			return tabs;
 		}
 	}
 
 	public static class Assign extends Expression {
 		public Expression to;
-		public String field;
+		public Expression value;
 
-		public Assign(Expression to, String field) {
+		public Assign(Expression to, Expression value) {
 			this.to = to;
-			this.field = field;
+			this.value = value;
 		}
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			tabs = this.to.emit(builder, tabs);
-			builder.append(" = ").append(this.field);
+			builder.append(" = ");
 
+			return this.value.emit(builder, tabs);
+		}
+	}
+
+	public static class Call extends Expression {
+		public Expression callee;
+		public ArrayList<Expression> arguments;
+
+		public Call(Expression callee, ArrayList<Expression> arguments) {
+			this.callee = callee;
+			this.arguments = arguments;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.callee.emit(builder, tabs);
+			builder.append('(');
+
+			if (this.arguments != null) {
+				for (int i = 0; i < this.arguments.size(); i++) {
+					this.arguments.get(i).emit(builder, tabs);
+
+					if (i < this.arguments.size() - 1) {
+						builder.append(", ");
+					}
+				}
+			}
+
+			builder.append(')');
 			return tabs;
 		}
 	}

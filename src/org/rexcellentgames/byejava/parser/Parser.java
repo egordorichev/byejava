@@ -124,6 +124,112 @@ public class Parser {
 		return null;
 	}
 
+	private Expression finishCall(Expression expression) {
+		ArrayList<Expression> arguments = null;
+
+		if (this.peek().type != TokenType.RIGHT_PAREN) {
+			arguments = new ArrayList<>();
+
+			do {
+				arguments.add(this.parseExpression());
+			} while (this.match(TokenType.COMMA));
+		}
+
+		this.consume(TokenType.RIGHT_PAREN, "')' expected");
+		return new Expression.Call(expression, arguments);
+	}
+
+	private Expression parseCall() {
+		Expression expression = this.parsePrimary();
+
+		while (true) {
+			if (this.match(TokenType.LEFT_PAREN)) {
+				expression = this.finishCall(expression);
+			} else if (this.match(TokenType.DOT)) {
+				expression = new Expression.Get(expression, this.consume(TokenType.IDENTIFIER, "Field name expected").getLexeme(this.code));
+			} else {
+				break;
+			}
+		}
+
+		return expression;
+	}
+
+	private Expression parseUnary() {
+		if (this.match(TokenType.MINUS, TokenType.BANG)) {
+			TokenType operator = this.peekPrevious().type;
+			return new Expression.Unary(operator, this.parseUnary());
+		}
+
+		return this.parseCall();
+	}
+
+	private Expression parseMultiplication() {
+		Expression expression = this.parseUnary();
+
+		while (this.match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseUnary());
+		}
+
+		return expression;
+	}
+
+	private Expression parseAddition() {
+		Expression expression = this.parseMultiplication();
+
+		while (this.match(TokenType.PLUS, TokenType.MINUS)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseMultiplication());
+		}
+
+		return expression;
+	}
+
+	private Expression parseComparison() {
+		Expression expression = this.parseAddition();
+
+		while (this.match(TokenType.GREATER_EQUAL, TokenType.LESS_EQUAL)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseAddition());
+		}
+
+		return expression;
+	}
+
+	private Expression parseEquality() {
+		Expression expression = this.parseComparison();
+
+		while (this.match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseComparison());
+		}
+
+		return expression;
+	}
+
+	private Expression parseAnd() {
+		Expression expression = this.parseEquality();
+
+		while (this.match(TokenType.AND)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseEquality());
+		}
+
+		return expression;
+	}
+
+	private Expression parseOr() {
+		Expression expression = this.parseAnd();
+
+		while (this.match(TokenType.OR)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Binary(operator, expression, this.parseAnd());
+		}
+
+		return expression;
+	}
+
 	private Expression parseAssignment() {
 		Expression expression = this.parseOr();
 
@@ -134,7 +240,7 @@ public class Parser {
 				return new Expression.Assign(expression, value);
 			} else if (expression instanceof Expression.Get) {
 				Expression.Get get = (Expression.Get) expression;
-				return new Expression.Set(get.object, get.name, value);
+				return new Expression.Set(get.from, value, get.field);
 			}
 
 			this.error("Invalid assignment target.");
@@ -167,7 +273,10 @@ public class Parser {
 			return this.parseReturn();
 		}
 
-		return new Statement.Expr(this.parseExpression());
+		Statement statement = new Statement.Expr(this.parseExpression());
+		this.consume(TokenType.SEMICOLON, "';' expected");
+
+		return statement;
 	}
 
 	private Statement parseEnumStatement(Modifier modifier) {

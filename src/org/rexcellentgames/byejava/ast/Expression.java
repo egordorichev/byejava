@@ -69,5 +69,88 @@ public class Expression extends Ast {
 		}
 	}
 
-	// todo: binary
+	public static class Binary extends Expression {
+		public TokenType operator;
+		public Expression left;
+		public Expression right;
+
+		public Binary(TokenType operator, Expression left, Expression right) {
+			this.operator = operator;
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.left.emit(builder, tabs);
+
+			switch (this.operator) {
+				case MINUS: builder.append(" - "); break;
+				case PLUS: builder.append(" + "); break;
+				case SLASH: builder.append(" / "); break;
+				case STAR: builder.append(" * "); break;
+				case PERCENT: builder.append(" % "); break;
+			}
+
+			return this.right.emit(builder, tabs);
+		}
+	}
+
+	public static class Get extends Expression {
+		public Expression from;
+		public String field;
+
+		public Get(Expression from, String field) {
+			this.from = from;
+			this.field = field;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.from.emit(builder, tabs);
+			builder.append('.').append(this.field);
+
+			return tabs;
+		}
+	}
+
+	public static class Set extends Expression {
+		public Expression to;
+		public Expression from;
+		public String field;
+
+		public Set(Expression from, Expression to, String field) {
+			this.from = from;
+			this.to = to;
+			this.field = field;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.from.emit(builder, tabs);
+			builder.append('.');
+			tabs = this.to.emit(builder, tabs);
+			builder.append(" = ").append(this.field);
+
+			return tabs;
+		}
+	}
+
+	public static class Assign extends Expression {
+		public Expression to;
+		public String field;
+
+		public Assign(Expression to, String field) {
+			this.to = to;
+			this.field = field;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.to.emit(builder, tabs);
+			builder.append(" = ").append(this.field);
+
+			return tabs;
+		}
+	}
 }

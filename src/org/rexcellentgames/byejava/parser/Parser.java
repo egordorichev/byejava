@@ -124,8 +124,27 @@ public class Parser {
 		return null;
 	}
 
+	private Expression parseAssignment() {
+		Expression expression = this.parseOr();
+
+		if (this.match(TokenType.EQUAL)) {
+			Expression value = this.parseAssignment();
+
+			if (expression instanceof Expression.Variable) {
+				return new Expression.Assign(expression, value);
+			} else if (expression instanceof Expression.Get) {
+				Expression.Get get = (Expression.Get) expression;
+				return new Expression.Set(get.object, get.name, value);
+			}
+
+			this.error("Invalid assignment target.");
+		}
+
+		return expression;
+	}
+
 	private Expression parseExpression() {
-		return this.parsePrimary();
+		return this.parseAssignment();
 	}
 
 	private Statement parseReturn() {

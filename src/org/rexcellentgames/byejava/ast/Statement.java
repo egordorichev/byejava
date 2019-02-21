@@ -10,6 +10,15 @@ public class Statement extends Ast {
 		public Expr(Expression expression) {
 			this.expression = expression;
 		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			tabs = this.expression.emit(builder, tabs);
+			builder.append(";\n");
+
+			return tabs;
+		}
 	}
 
 	public static class Package extends Statement {
@@ -295,6 +304,28 @@ public class Statement extends Ast {
 			indent(builder, tabs);
 			builder.append("}\n");
 
+			return tabs;
+		}
+	}
+
+	public static class Return extends Statement {
+		public Expression value;
+
+		public Return(Expression value) {
+			this.value = value;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("return");
+
+			if (this.value != null) {
+				builder.append(' ');
+				tabs = this.value.emit(builder, tabs);
+			}
+
+			builder.append(";\n");
 			return tabs;
 		}
 	}

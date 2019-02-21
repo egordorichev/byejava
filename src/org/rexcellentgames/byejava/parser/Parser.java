@@ -116,6 +116,10 @@ public class Parser {
 			return new Expression.Literal(Double.parseDouble(this.peekPrevious().getLexeme(this.code)));
 		}
 
+		if (this.match(TokenType.IDENTIFIER)) {
+			return new Expression.Variable(this.peekPrevious().getLexeme(this.code));
+		}
+
 		this.error("Unexpected token " + this.peek().type);
 		return null;
 	}
@@ -124,9 +128,24 @@ public class Parser {
 		return this.parsePrimary();
 	}
 
+	private Statement parseReturn() {
+		Expression value = null;
+
+		if (!this.match(TokenType.SEMICOLON)) {
+			value = this.parseExpression();
+			this.consume(TokenType.SEMICOLON, "';' expected");
+		}
+
+		return new Statement.Return(value);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
+		}
+
+		if (this.match(TokenType.RETURN)) {
+			return this.parseReturn();
 		}
 
 		return new Statement.Expr(this.parseExpression());
@@ -139,26 +158,28 @@ public class Parser {
 		String enumName = this.consume(TokenType.IDENTIFIER, "Enum name expected").getLexeme(this.code);
 		this.consume(TokenType.LEFT_BRACE, "'{' expected");
 
-		while (true) {
-			if (values == null) {
-				values = new ArrayList<>();
-			}
-
-			String name = this.consume(TokenType.IDENTIFIER, "Enum field name expected").getLexeme(this.code);
-			values.add(name);
-
-			if (this.match(TokenType.EQUAL)) {
-				String value = this.consume(TokenType.NUMBER, "Number expected").getLexeme(this.code);
-
-				if (init == null) {
-					init = new HashMap<>();
+		if (this.peek().type != TokenType.RIGHT_BRACE) {
+			while (true) {
+				if (values == null) {
+					values = new ArrayList<>();
 				}
 
-				init.put(name, new Expression.Literal(Integer.parseInt(value)));
-			}
+				String name = this.consume(TokenType.IDENTIFIER, "Enum field name expected").getLexeme(this.code);
+				values.add(name);
 
-			if (!this.match(TokenType.COMMA)) {
-				break;
+				if (this.match(TokenType.EQUAL)) {
+					String value = this.consume(TokenType.NUMBER, "Number expected").getLexeme(this.code);
+
+					if (init == null) {
+						init = new HashMap<>();
+					}
+
+					init.put(name, new Expression.Literal(Integer.parseInt(value)));
+				}
+
+				if (!this.match(TokenType.COMMA)) {
+					break;
+				}
 			}
 		}
 

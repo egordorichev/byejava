@@ -18,4 +18,8 @@ public class Token {
 	public Token() {
 
 	}
+
+	public String getLexeme(String code) {
+		return code.substring(this.start, this.start + this.size);
+	}
 }

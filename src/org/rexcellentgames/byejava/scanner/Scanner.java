@@ -21,7 +21,6 @@ public class Scanner {
 	}
 
 	protected Token makeToken(TokenType type) {
-		System.out.println("Make token '" + this.source.substring(this.start, this.position) + "'");
 		return new Token(type, this.start, this.position - this.start, this.line);
 	}
 
@@ -30,11 +29,14 @@ public class Scanner {
 	}
 
 	protected char advance() {
-		this.position ++;
+		if (!ended) {
+			this.position ++;
+		} else {
+			return '\0';
+		}
 
 		if (this.position >= this.source.length()) {
 			this.ended = true;
-			return '\0';
 		}
 
 		return this.source.charAt(this.position - 1);
@@ -119,8 +121,6 @@ public class Scanner {
 		}
 
 		if (Character.isDigit(c)) {
-			this.advance();
-
 			while (Character.isDigit(this.peek())) {
 				this.advance();
 			}
@@ -160,6 +160,7 @@ public class Scanner {
 			case ':': return this.makeToken(TokenType.COLON);
 			case '?': return this.makeToken(TokenType.QUESTION);
 			case ',': return this.makeToken(TokenType.COMMA);
+			case '=': return this.decideToken('=', TokenType.EQUAL_EQUAL, TokenType.EQUAL);
 			case '-': return this.decideToken('=', TokenType.MINUS_EQUAL, TokenType.MINUS);
 			case '+': return this.decideToken('=', TokenType.PLUS_EQUAL, TokenType.PLUS);
 			case '/': return this.decideToken('=', TokenType.SLASH_EQUAL, TokenType.SLASH);

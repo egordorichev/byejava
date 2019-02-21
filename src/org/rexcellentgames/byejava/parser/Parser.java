@@ -1,8 +1,6 @@
 package org.rexcellentgames.byejava.parser;
 
-import org.rexcellentgames.byejava.ast.Access;
-import org.rexcellentgames.byejava.ast.Modifier;
-import org.rexcellentgames.byejava.ast.Statement;
+import org.rexcellentgames.byejava.ast.*;
 import org.rexcellentgames.byejava.scanner.Token;
 import org.rexcellentgames.byejava.scanner.TokenType;
 
@@ -96,13 +94,119 @@ public class Parser {
 		return new Statement.Package(builder.toString());
 	}
 
+	private Expression parsePrimary() {
+		if (this.match(TokenType.FALSE)) {
+			return new Expression.Literal(false);
+		}
+
+		if (this.match(TokenType.TRUE)) {
+			return new Expression.Literal(true);
+		}
+
+		if (this.match(TokenType.NULL)) {
+			return new Expression.Literal(null);
+		}
+
+		if (this.match(TokenType.STRING)) {
+			return new Expression.Literal(this.peekPrevious().getLexeme(this.code));
+		}
+
+		if (this.match(TokenType.NUMBER)) {
+			return new Expression.Literal(Double.parseDouble(this.peekPrevious().getLexeme(this.code)));
+		}
+
+		this.error("Unexpected token");
+		return null;
+	}
+
+	private Expression parseExpression() {
+		return this.parsePrimary();
+	}
+
+	private Statement parseStatement() {
+		return new Statement.Expr(this.parseExpression());
+	}
+
+	private Statement parseBlock() {
+		ArrayList<Statement> statements = null;
+
+		if (!this.match(TokenType.RIGHT_PAREN)) {
+			statements = new ArrayList<>();
+			tryAdd(statements, this.parseStatement());
+		}
+
+		return new Statement.Block(statements);
+	}
+
+	private Statement parseField() {
+		Modifier modifier = new Modifier();
+		boolean found = false;
+
+		while (true) {
+			TokenType type = this.advance().type;
+
+			switch (type) {
+				case PUBLIC: modifier.access = Access.PUBLIC; break;
+				case PROTECTED: modifier.access = Access.PROTECTED; break;
+				case PRIVATE: modifier.access = Access.PRIVATE; break;
+				case FINAL: modifier.isFinal = true; break;
+				case STATIC: modifier.isStatic = true; break;
+				case ABSTRACT: modifier.isAbstract = true; break;
+
+				default: {
+					found = true;
+					break;
+				}
+			}
+
+			if (found) {
+				break;
+			}
+		}
+
+		if (this.peekPrevious().type != TokenType.IDENTIFIER) {
+			error("Field type expected");
+		}
+
+		String type = this.peekPrevious().getLexeme(this.code);
+		String name = this.consume(TokenType.IDENTIFIER, "Field name expected").getLexeme(this.code);
+		Expression init = null;
+
+		if (this.match(TokenType.EQUAL)) {
+			init = this.parseExpression();
+		} else if (this.match(TokenType.LEFT_PAREN)) {
+			ArrayList<Argument> arguments = new ArrayList<>();
+
+			while (!this.match(TokenType.RIGHT_PAREN)) {
+				String argumentType = this.consume(TokenType.IDENTIFIER, "Argument type expected").getLexeme(this.code);
+				String argumentName = this.consume(TokenType.IDENTIFIER, "Argument name expected").getLexeme(this.code);
+
+				arguments.add(new Argument(argumentName, argumentType));
+
+				if (!this.match(TokenType.COMMA)) {
+					this.consume(TokenType.RIGHT_PAREN, "')' expected");
+					break;
+				}
+			}
+
+			if (modifier.isAbstract) {
+				this.consume(TokenType.SEMICOLON, "';' expected");
+			} else {
+				this.consume(TokenType.LEFT_BRACE, "'{' expected");
+			}
+
+			return new Statement.Method(null, type, name, modifier, (Statement.Block) this.parseBlock(), arguments);
+		}
+
+		this.consume(TokenType.SEMICOLON, "';' expected");
+		return new Statement.Field(init, type, name, modifier);
+	}
+
 	private Statement parseClassStatement(Modifier modifier) {
 		Token name = this.consume(TokenType.IDENTIFIER, "Class name expected");
 		String base = null;
 		ArrayList<String> implementations = null;
 		ArrayList<Statement.Field> fields = null;
-
-		boolean forceImplement = false;
 
 		if (this.match(TokenType.EXTENDS)) {
 			base = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
@@ -121,16 +225,36 @@ public class Parser {
 		}
 
 		this.consume(TokenType.LEFT_BRACE, "'{' expected");
-		this.consume(TokenType.RIGHT_BRACE, "'}' expected");
+
+		if (this.peek().type != TokenType.RIGHT_BRACE) {
+			fields = new ArrayList<>();
+		}
+
+		while (!this.match(TokenType.RIGHT_BRACE)) {
+			Statement statement = this.parseField();
+
+			if (statement != null) {
+				fields.add((Statement.Field) statement);
+			}
+		}
 
 		return new Statement.Class(name.getLexeme(this.code), base, implementations, fields, modifier);
 	}
 
-	private Statement parseStatement(Modifier modifier) {
+	private Statement parseDeclaration(Modifier modifier) {
 		TokenType type = this.advance().type;
 
 		switch (type) {
 			case CLASS: return parseClassStatement(modifier == null ? new Modifier() : modifier);
+
+			case ABSTRACT: {
+				if (modifier == null) {
+					modifier = new Modifier();
+				}
+
+				modifier.isAbstract = true;
+				return parseDeclaration(modifier);
+			}
 
 			case PUBLIC: {
 				if (modifier == null) {
@@ -138,7 +262,7 @@ public class Parser {
 				}
 
 				modifier.access = Access.PUBLIC;
-				return parseStatement(modifier);
+				return parseDeclaration(modifier);
 			}
 
 			case PROTECTED: {
@@ -147,7 +271,7 @@ public class Parser {
 				}
 
 				modifier.access = Access.PROTECTED;
-				return parseStatement(modifier);
+				return parseDeclaration(modifier);
 			}
 
 			case PRIVATE: {
@@ -156,7 +280,7 @@ public class Parser {
 				}
 
 				modifier.access = Access.PRIVATE;
-				return parseStatement(modifier);
+				return parseDeclaration(modifier);
 			}
 
 			case STATIC: {
@@ -165,7 +289,7 @@ public class Parser {
 				}
 
 				modifier.isStatic = true;
-				return parseStatement(modifier);
+				return parseDeclaration(modifier);
 			}
 
 			case FINAL: {
@@ -174,7 +298,7 @@ public class Parser {
 				}
 
 				modifier.isFinal = true;
-				return parseStatement(modifier);
+				return parseDeclaration(modifier);
 			}
 		}
 
@@ -196,7 +320,7 @@ public class Parser {
 		}
 
 		while (!this.isAtEnd()) {
-			this.tryAdd(statements, this.parseStatement(null));
+			this.tryAdd(statements, this.parseDeclaration(null));
 		}
 
 		return statements;

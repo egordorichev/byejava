@@ -6,4 +6,14 @@ public class Test extends A implements B, C {
 	public String getThing(String thing, int a) {
 
 	}
+
+	public class Inner {
+
+	}
+
+	public enum Awesome {
+		SUPER,
+		AMAZING,
+		AAAAAWESOME
+	}
 }

@@ -5,6 +5,7 @@ import org.rexcellentgames.byejava.scanner.Token;
 import org.rexcellentgames.byejava.scanner.TokenType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Parser {
 	private ArrayList<Token> tokens;
@@ -131,6 +132,41 @@ public class Parser {
 		return new Statement.Expr(this.parseExpression());
 	}
 
+	private Statement parseEnumStatement(Modifier modifier) {
+		ArrayList<String> values = null;
+		HashMap<String, Expression.Literal> init = null;
+
+		String enumName = this.consume(TokenType.IDENTIFIER, "Enum name expected").getLexeme(this.code);
+		this.consume(TokenType.LEFT_BRACE, "'{' expected");
+
+		while (true) {
+			if (values == null) {
+				values = new ArrayList<>();
+			}
+
+			String name = this.consume(TokenType.IDENTIFIER, "Enum field name expected").getLexeme(this.code);
+			values.add(name);
+
+			if (this.match(TokenType.EQUAL)) {
+				String value = this.consume(TokenType.NUMBER, "Number expected").getLexeme(this.code);
+
+				if (init == null) {
+					init = new HashMap<>();
+				}
+
+				init.put(name, new Expression.Literal(Integer.parseInt(value)));
+			}
+
+			if (!this.match(TokenType.COMMA)) {
+				break;
+			}
+		}
+
+		this.consume(TokenType.RIGHT_BRACE, "'}' expected");
+
+		return new Statement.Enum(modifier, enumName, values, init);
+	}
+
 	private Statement parseBlock() {
 		ArrayList<Statement> statements = null;
 
@@ -173,6 +209,14 @@ public class Parser {
 			if (found) {
 				break;
 			}
+		}
+
+		if (this.peekPrevious().type == TokenType.CLASS) {
+			return parseClassStatement(modifier);
+		}
+
+		if (this.peekPrevious().type == TokenType.ENUM) {
+			return parseEnumStatement(modifier);
 		}
 
 		if (this.peekPrevious().type != TokenType.IDENTIFIER) {
@@ -218,6 +262,8 @@ public class Parser {
 		String base = null;
 		ArrayList<String> implementations = null;
 		ArrayList<Statement.Field> fields = null;
+		ArrayList<Statement.Method> methods = null;
+		ArrayList<Statement> inner = null;
 
 		if (this.match(TokenType.EXTENDS)) {
 			base = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
@@ -237,19 +283,33 @@ public class Parser {
 
 		this.consume(TokenType.LEFT_BRACE, "'{' expected");
 
-		if (this.peek().type != TokenType.RIGHT_BRACE) {
-			fields = new ArrayList<>();
-		}
-
 		while (!this.match(TokenType.RIGHT_BRACE)) {
 			Statement statement = this.parseField();
 
 			if (statement != null) {
-				fields.add((Statement.Field) statement);
+				if (statement instanceof Statement.Class || statement instanceof Statement.Enum) {
+					if (inner == null) {
+						inner = new ArrayList<>();
+					}
+
+					inner.add(statement);
+				} else if (statement instanceof Statement.Method) {
+					if (methods == null) {
+						methods = new ArrayList<>();
+					}
+
+					methods.add((Statement.Method) statement);
+				} else {
+					if (fields == null) {
+						fields = new ArrayList<>();
+					}
+
+					fields.add((Statement.Field) statement);
+				}
 			}
 		}
 
-		return new Statement.Class(name.getLexeme(this.code), base, implementations, fields, modifier);
+		return new Statement.Class(name.getLexeme(this.code), base, implementations, fields, modifier, methods, inner);
 	}
 
 	private Statement parseDeclaration(Modifier modifier) {
@@ -257,6 +317,7 @@ public class Parser {
 
 		switch (type) {
 			case CLASS: return parseClassStatement(modifier == null ? new Modifier() : modifier);
+			case ENUM: return parseEnumStatement(modifier == null ? new Modifier() : modifier);
 
 			case ABSTRACT: {
 				if (modifier == null) {

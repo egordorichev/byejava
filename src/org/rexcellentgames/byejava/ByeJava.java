@@ -1,11 +1,14 @@
 package org.rexcellentgames.byejava;
 
 import org.rexcellentgames.byejava.ast.Statement;
+import org.rexcellentgames.byejava.emitter.Emitter;
 import org.rexcellentgames.byejava.parser.Parser;
 import org.rexcellentgames.byejava.scanner.Scanner;
 import org.rexcellentgames.byejava.scanner.Token;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -33,11 +36,21 @@ public class ByeJava {
 		}
 		*/
 
-		Parser parser = new Parser(tokens, code);
 		System.out.println("=================");
 
-		for (Statement statement : parser.parse()) {
+		Parser parser = new Parser(tokens, code);
+		ArrayList<Statement> ast = parser.parse();
+
+		for (Statement statement : ast) {
 			System.out.println(statement.getClass().getSimpleName());
+		}
+
+		Emitter emitter = new Emitter(ast);
+
+		try (PrintWriter out = new PrintWriter("src/test/Test.cs")) {
+			out.println(emitter.emit());
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 	}
 }

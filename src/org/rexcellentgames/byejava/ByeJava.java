@@ -3,11 +3,13 @@ package org.rexcellentgames.byejava;
 import org.rexcellentgames.byejava.ast.Statement;
 import org.rexcellentgames.byejava.parser.Parser;
 import org.rexcellentgames.byejava.scanner.Scanner;
+import org.rexcellentgames.byejava.scanner.Token;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class ByeJava {
 	private static String getSource() {
@@ -23,8 +25,15 @@ public class ByeJava {
 	public static void main(String[] args) {
 		String code = getSource();
 		Scanner scanner = new Scanner(code);
-		Parser parser = new Parser(scanner.scan(), code);
+		ArrayList<Token> tokens = scanner.scan();
 
+		/*
+		for (Token token : tokens) {
+			System.out.println(token.type);
+		}
+		*/
+
+		Parser parser = new Parser(tokens, code);
 		System.out.println("=================");
 
 		for (Statement statement : parser.parse()) {

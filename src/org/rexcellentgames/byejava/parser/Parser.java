@@ -22,7 +22,7 @@ public class Parser {
 	}
 
 	private boolean isAtEnd() {
-		return this.current >= this.tokens.size();
+		return this.peek().type == TokenType.EOF;
 	}
 
 	private Token peekPrevious() {
@@ -115,7 +115,7 @@ public class Parser {
 			return new Expression.Literal(Double.parseDouble(this.peekPrevious().getLexeme(this.code)));
 		}
 
-		this.error("Unexpected token");
+		this.error("Unexpected token " + this.peek().type);
 		return null;
 	}
 
@@ -124,15 +124,26 @@ public class Parser {
 	}
 
 	private Statement parseStatement() {
+		if (this.match(TokenType.LEFT_BRACE)) {
+			return this.parseBlock();
+		}
+
 		return new Statement.Expr(this.parseExpression());
 	}
 
 	private Statement parseBlock() {
 		ArrayList<Statement> statements = null;
 
-		if (!this.match(TokenType.RIGHT_PAREN)) {
+		if (!this.match(TokenType.RIGHT_BRACE)) {
 			statements = new ArrayList<>();
-			tryAdd(statements, this.parseStatement());
+
+			while (true) {
+				tryAdd(statements, this.parseStatement());
+
+				if (this.match(TokenType.RIGHT_BRACE)) {
+					break;
+				}
+			}
 		}
 
 		return new Statement.Block(statements);
@@ -195,7 +206,7 @@ public class Parser {
 				this.consume(TokenType.LEFT_BRACE, "'{' expected");
 			}
 
-			return new Statement.Method(null, type, name, modifier, (Statement.Block) this.parseBlock(), arguments);
+			return new Statement.Method(null, type, name, modifier, modifier.isAbstract ? null : (Statement.Block) this.parseBlock(), arguments);
 		}
 
 		this.consume(TokenType.SEMICOLON, "';' expected");

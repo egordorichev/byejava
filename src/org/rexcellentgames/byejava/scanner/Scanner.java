@@ -219,6 +219,8 @@ public class Scanner {
 			tokens.add(this.scanToken());
 		}
 
+		tokens.add(this.makeToken(TokenType.EOF));
+
 		return tokens;
 	}
 }

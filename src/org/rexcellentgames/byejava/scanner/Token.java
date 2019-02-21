@@ -1,6 +1,8 @@
 package org.rexcellentgames.byejava.scanner;
 
 public class Token {
+	public static int lastId;
+
 	public TokenType type;
 	public int start;
 	public int size;

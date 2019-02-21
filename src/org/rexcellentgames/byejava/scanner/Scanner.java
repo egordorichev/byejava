@@ -34,9 +34,10 @@ public class Scanner {
 
 		if (this.position >= this.source.length()) {
 			this.ended = true;
+			return '\0';
 		}
 
-		return this.peek();
+		return this.source.charAt(this.position - 1);
 	}
 
 	protected char peek() {
@@ -89,14 +90,33 @@ public class Scanner {
 		return Keywords.types.getOrDefault(this.source.substring(this.start, this.position), TokenType.IDENTIFIER);
 	}
 
-	public Token scanToken() {
-		this.skipWhitespace();
+	private Token decideToken(char c, TokenType a, TokenType b) {
+		if (this.match(c)) {
+			return this.makeToken(a);
+		}
+		
+		return this.makeToken(b);
+	}
 
-		if (ended) {
-			return makeToken(TokenType.EOF);
+	private Token decideToken(char ch, TokenType a, char e, TokenType b, TokenType c) {
+		if (this.match(ch)) {
+			return this.makeToken(a);
 		}
 
-		char c = this.peek();
+		if (this.match(e)) {
+			return this.makeToken(b);
+		}
+
+		return this.makeToken(c);
+	}
+
+	public Token scanToken() {
+		this.skipWhitespace();
+		char c = this.advance();
+
+		if (c == '\0') {
+			return makeToken(TokenType.EOF);
+		}
 
 		if (Character.isDigit(c)) {
 			this.advance();
@@ -128,10 +148,41 @@ public class Scanner {
 				break;
 			}
 
-			return makeToken(this.getIdentifierType());
+			return this.makeToken(this.getIdentifierType());
 		}
 
 		switch (c) {
+			case '(': return this.makeToken(TokenType.LEFT_PAREN);
+			case ')': return this.makeToken(TokenType.RIGHT_PAREN);
+			case '{': return this.makeToken(TokenType.LEFT_BRACE);
+			case '}': return this.makeToken(TokenType.RIGHT_BRACE);
+			case ';': return this.makeToken(TokenType.SEMICOLON);
+			case ':': return this.makeToken(TokenType.COLON);
+			case '?': return this.makeToken(TokenType.QUESTION);
+			case ',': return this.makeToken(TokenType.COMMA);
+			case '-': return this.decideToken('=', TokenType.MINUS_EQUAL, TokenType.MINUS);
+			case '+': return this.decideToken('=', TokenType.PLUS_EQUAL, TokenType.PLUS);
+			case '/': return this.decideToken('=', TokenType.SLASH_EQUAL, TokenType.SLASH);
+			case '%': return this.decideToken('=', TokenType.PERCENT_EQUAL, TokenType.PERCENT);
+			case '*': return this.decideToken('=', TokenType.STAR_EQUAL, TokenType.STAR);
+			case '>': return this.decideToken('=', TokenType.GREATER_EQUAL, TokenType.GREATER);
+			case '<': return this.decideToken('=', TokenType.LESS_EQUAL, TokenType.LESS);
+			case '!': return this.decideToken('=', TokenType.BANG_EQUAL, TokenType.BANG);
+			case '&': return this.decideToken('=', TokenType.AMPERSAND_EQUAL, '&', TokenType.AND, TokenType.AMPERSAND);
+			case '|': return this.decideToken('=', TokenType.BAR_EQUAL, '|', TokenType.OR, TokenType.BAR);
+
+			case '.': {
+				if (this.match('.')) {
+					if (this.match('.')) {
+						return this.makeToken(TokenType.DOT_DOT_DOT);
+					} else {
+						return this.error("'.' expected");
+					}
+				}
+
+				return this.makeToken(TokenType.DOT);
+			}
+
 			case '\"': {
 				while (true) {
 					c = this.advance();
@@ -141,7 +192,6 @@ public class Scanner {
 					}
 
 					if (c == '\"') {
-						this.advance();
 						break;
 					}
 
@@ -153,7 +203,7 @@ public class Scanner {
 				return makeToken(TokenType.STRING);
 			}
 
-			default: return makeToken(TokenType.ERROR);
+			default: return error(String.format("Unexpected char '%c'", c));
 		}
 	}
 

@@ -129,6 +129,14 @@ public class Parser {
 			return new Expression.Grouping(expression);
 		}
 
+		if (this.match(TokenType.THIS)) {
+			return new Expression.This();
+		}
+
+		if (this.match(TokenType.SUPER)) {
+			return new Expression.Super();
+		}
+
 		this.error("Unexpected token " + this.peek().type);
 		return null;
 	}
@@ -528,7 +536,15 @@ public class Parser {
 		}
 
 		String type = this.peekPrevious().getLexeme(this.code);
-		String name = this.consume(TokenType.IDENTIFIER, "Field name expected").getLexeme(this.code);
+		String name = null;
+
+		if (this.peek().type == TokenType.IDENTIFIER) {
+			name = this.advance().getLexeme(this.code);
+		} else {
+			name = type;
+			type = null;
+		}
+
 		Expression init = null;
 
 		if (this.match(TokenType.EQUAL)) {
@@ -569,6 +585,7 @@ public class Parser {
 		ArrayList<Statement.Field> fields = null;
 		ArrayList<Statement.Method> methods = null;
 		ArrayList<Statement> inner = null;
+		ArrayList<Statement.Block> init = null;
 
 		if (this.match(TokenType.EXTENDS)) {
 			base = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
@@ -590,6 +607,27 @@ public class Parser {
 
 		while (!this.match(TokenType.RIGHT_BRACE)) {
 			boolean override = this.match(TokenType.OVERRIDE);
+
+			if (this.peek().type == TokenType.STATIC && this.peekNext().type == TokenType.LEFT_BRACE) {
+				this.advance();
+				this.advance();
+
+				if (inner == null) {
+					inner = new ArrayList<>();
+				}
+
+				inner.add(this.parseBlock());
+				continue;
+			}
+
+			if (this.match(TokenType.LEFT_BRACE)) {
+				if (init == null) {
+					init = new ArrayList<>();
+				}
+
+				init.add((Statement.Block) this.parseBlock());
+				continue;
+			}
 
 			Statement statement = this.parseField();
 
@@ -620,7 +658,7 @@ public class Parser {
 			}
 		}
 
-		return new Statement.Class(name.getLexeme(this.code), base, implementations, fields, modifier, methods, inner);
+		return new Statement.Class(name.getLexeme(this.code), base, implementations, fields, modifier, methods, inner, init);
 	}
 
 	private Statement parseDeclaration(Modifier modifier) {

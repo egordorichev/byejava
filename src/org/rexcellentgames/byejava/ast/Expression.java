@@ -229,4 +229,20 @@ public class Expression extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class This extends Expression {
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append("this");
+			return tabs;
+		}
+	}
+
+	public static class Super extends Expression {
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append("base");
+			return tabs;
+		}
+	}
 }

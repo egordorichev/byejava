@@ -1,8 +1,26 @@
 namespace test {
 	public class Test {
-		public override void test(params String[] a) {
-			test[getThing()] = 2f;
+		protected void _Init() {
+			{
+				c = 32;
+			}
+
+			{
+				d = 32;
+			}
+		}
+
+		static Test() {
+			a = 32;
+		}
+
+		public Test() {
+			_Init();
+		}
+
+		public Test(int a) {
+			_Init();
+			this.a = a;
 		}
 	}
 }
-

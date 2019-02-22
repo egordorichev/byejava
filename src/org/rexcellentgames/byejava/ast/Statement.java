@@ -37,7 +37,7 @@ public class Statement extends Ast {
 		@Override
 		public int emitEnd(StringBuilder builder, int tabs) {
 			tabs--;
-			builder.append("}\n");
+			builder.append("}");
 
 			return tabs;
 		}
@@ -49,10 +49,11 @@ public class Statement extends Ast {
 		public ArrayList<String> implementations;
 		public ArrayList<Field> fields;
 		public ArrayList<Method> methods;
+		public ArrayList<Block> init;
 		public ArrayList<Statement> inner;
 		public Modifier modifier;
 
-		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner) {
+		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init) {
 			this.name = name;
 			this.base = base;
 			this.implementations = implementations;
@@ -60,6 +61,7 @@ public class Statement extends Ast {
 			this.modifier = modifier;
 			this.inner = inner;
 			this.methods = methods;
+			this.init = init;
 		}
 
 		@Override
@@ -104,12 +106,38 @@ public class Statement extends Ast {
 			builder.append(" {\n");
 			tabs++;
 
+			if (this.init != null) {
+				indent(builder, tabs);
+				builder.append("protected void _Init() {\n");
+				tabs++;
+
+				for (int i = 0; i < this.init.size(); i++) {
+					indent(builder, tabs);
+					this.init.get(i).emit(builder, tabs);
+
+					if (i < this.init.size() - 1) {
+						builder.append("\n");
+					}
+				}
+
+				tabs--;
+				indent(builder, tabs);
+				builder.append("}\n\n");
+			}
+
 			if (this.inner == null && this.fields == null && this.methods == null) {
 				builder.append('\n');
 			} else {
 				if (this.inner != null) {
 					for (int i = 0; i < this.inner.size(); i++) {
-						tabs = this.inner.get(i).emit(builder, tabs);
+						Statement statement = this.inner.get(i);
+
+						if (statement instanceof Block) {
+							indent(builder, tabs);
+							builder.append("static ").append(this.name).append("() ");
+						}
+
+						tabs = statement.emit(builder, tabs);
 
 						if (this.fields != null || this.methods != null || i < this.inner.size() - 1) {
 							builder.append('\n');
@@ -127,14 +155,41 @@ public class Statement extends Ast {
 					}
 				}
 
+				boolean calledInit = false;
+
 				if (this.methods != null) {
 					for (int i = 0; i < this.methods.size(); i++) {
-						tabs = this.methods.get(i).emit(builder, tabs);
+						Method method = this.methods.get(i);
+
+						if (this.init != null && method.name.equals(this.name)) {
+							method.block.callInit = true;
+							calledInit = true;
+						}
+
+						tabs = method.emit(builder, tabs);
 
 						if (i < this.methods.size() - 1) {
 							builder.append('\n');
 						}
 					}
+				}
+
+				if (!calledInit && this.init != null) {
+					builder.append('\n');
+					indent(builder, tabs);
+					builder.append("public ").append(this.name).append("() {\n");
+
+					for (int i = 0; i < this.init.size(); i++) {
+						indent(builder, tabs + 1);
+						this.init.get(i).emit(builder, tabs + 1);
+
+						if (i < this.init.size() - 1) {
+							builder.append('\n');
+						}
+					}
+
+					indent(builder, tabs);
+					builder.append("}\n");
 				}
 			}
 
@@ -178,7 +233,11 @@ public class Statement extends Ast {
 
 			this.insert(builder, tabs);
 
-			builder.append(this.type).append(' ').append(this.name);
+			if (this.type != null) {
+				builder.append(this.type).append(' ');
+			}
+
+			builder.append(this.name);
 
 			return this.end(builder, tabs);
 		}
@@ -200,6 +259,7 @@ public class Statement extends Ast {
 
 	public static class Block extends Statement {
 		public ArrayList<Statement> statements;
+		public boolean callInit;
 
 		public Block(ArrayList<Statement> statements) {
 			this.statements = statements;
@@ -209,6 +269,15 @@ public class Statement extends Ast {
 		public int emit(StringBuilder builder, int tabs) {
 			builder.append("{\n");
 			tabs++;
+
+			if (this.callInit) {
+				indent(builder, tabs);
+				builder.append("_Init();");
+
+				if (this.statements != null) {
+					builder.append('\n');
+				}
+			}
 
 			if (this.statements != null) {
 				for (int i = 0; i < this.statements.size(); i++) {

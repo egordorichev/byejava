@@ -1,13 +1,7 @@
 namespace test {
 	public class Test {
-		public void test() {
-			while (true) {
-				break;
-			}
+		public void test(params String[] a) {
 
-			do {
-				continue;
-			} while (true);
 		}
 	}
 }

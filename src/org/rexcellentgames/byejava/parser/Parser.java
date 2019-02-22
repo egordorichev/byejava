@@ -529,11 +529,12 @@ public class Parser {
 
 			while (!this.match(TokenType.RIGHT_PAREN)) {
 				String argumentType = this.consume(TokenType.IDENTIFIER, "Argument type expected").getLexeme(this.code);
+				boolean varg = this.match(TokenType.DOT_DOT_DOT);
 				String argumentName = this.consume(TokenType.IDENTIFIER, "Argument name expected").getLexeme(this.code);
 
-				arguments.add(new Argument(argumentName, argumentType));
+				arguments.add(new Argument(argumentName, argumentType, varg));
 
-				if (!this.match(TokenType.COMMA)) {
+				if (varg || !this.match(TokenType.COMMA)) {
 					this.consume(TokenType.RIGHT_PAREN, "')' expected");
 					break;
 				}

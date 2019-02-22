@@ -1,13 +1,7 @@
 package test;
 
 public class Test {
-	public void test() {
-		while (true) {
-			break;
-		}
+	public void test(String ... a) {
 
-		do {
-			continue;
-		} while (true);
 	}
 }

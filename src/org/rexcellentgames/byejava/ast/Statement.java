@@ -244,7 +244,18 @@ public class Statement extends Ast {
 			if (this.arguments != null) {
 				for (int i = 0; i < this.arguments.size(); i++) {
 					Argument argument = this.arguments.get(i);
-					builder.append(argument.type).append(' ').append(argument.name);
+
+					if (argument.varg) {
+						builder.append("params ");
+					}
+
+					builder.append(argument.type);
+
+					if (argument.varg) {
+						builder.append("[]");
+					}
+
+					builder.append(' ').append(argument.name);
 
 					if (i < this.arguments.size() - 1) {
 						builder.append(", ");

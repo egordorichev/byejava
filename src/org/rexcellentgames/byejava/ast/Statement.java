@@ -496,4 +496,41 @@ public class Statement extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class While extends Statement {
+		public Expression condition;
+		public Statement body;
+		public boolean flipped;
+
+		public While(Expression condition, Statement body, boolean flipped) {
+			this.condition = condition;
+			this.body = body;
+			this.flipped = flipped;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+
+			if (this.flipped) {
+				builder.append("do ");
+				this.body.emit(builder, tabs);
+
+				if (this.body instanceof Block) {
+					builder.deleteCharAt(builder.length() - 1);
+				}
+
+				builder.append(" while (");
+				this.condition.emit(builder, 0);
+				builder.append(");\n");
+			} else {
+				builder.append("while (");
+				this.condition.emit(builder, 0);
+				builder.append(") ");
+				this.body.emit(builder, tabs);
+			}
+
+			return tabs;
+		}
+	}
 }

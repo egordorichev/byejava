@@ -2,8 +2,12 @@ package test;
 
 public class Test {
 	public void test() {
-		for (State state : getStates()) {
+		while (true) {
 
 		}
+
+		do {
+
+		} while (true);
 	}
 }

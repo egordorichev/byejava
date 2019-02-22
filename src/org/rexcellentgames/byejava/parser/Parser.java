@@ -360,6 +360,26 @@ public class Parser {
 		return new Statement.Var(type, name, init);
 	}
 
+	private Statement parseDo() {
+		Statement body = this.parseStatement();
+		this.consume(TokenType.WHILE, "'while' expected");
+		this.consume(TokenType.LEFT_PAREN, "'(' expected");
+		Expression condition = this.parseExpression();
+		this.consume(TokenType.RIGHT_PAREN, "')' expected");
+		this.consume(TokenType.SEMICOLON, "';' expected");
+
+		return new Statement.While(condition, body, true);
+	}
+
+	private Statement parseWhile() {
+		this.consume(TokenType.LEFT_PAREN, "'(' expected");
+		Expression condition = this.parseExpression();
+		this.consume(TokenType.RIGHT_PAREN, "')' expected");
+		Statement body = this.parseStatement();
+
+		return new Statement.While(condition, body, false);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
@@ -379,6 +399,14 @@ public class Parser {
 
 		if (this.match(TokenType.RETURN)) {
 			return this.parseReturn();
+		}
+
+		if (this.match(TokenType.DO)) {
+			return this.parseDo();
+		}
+
+		if (this.match(TokenType.WHILE)) {
+			return this.parseWhile();
 		}
 
 		Statement statement = new Statement.Expr(this.parseExpression());

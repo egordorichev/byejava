@@ -1,11 +1,9 @@
 namespace test {
 	public class Test {
 		public void test() {
-			for (i = 0; i < 10; i++) {
-				thing();
-			}
+			foreach (State state in getStates()) {
 
-			for (;;) duuude();
+			}
 		}
 	}
 }

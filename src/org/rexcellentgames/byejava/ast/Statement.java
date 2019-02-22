@@ -393,12 +393,12 @@ public class Statement extends Ast {
 	}
 
 	public static class For extends Statement {
-		public Expression init;
+		public Statement init;
 		public Expression condition;
 		public Expression increment;
 		public Statement body;
 
-		public For(Expression init, Expression condition, Expression increment, Statement body) {
+		public For(Statement init, Expression condition, Expression increment, Statement body) {
 			this.init = init;
 			this.condition = condition;
 			this.increment = increment;
@@ -411,7 +411,12 @@ public class Statement extends Ast {
 			builder.append("for (");
 
 			if (this.init != null) {
-				init.emit(builder, tabs);
+				this.init.emit(builder, 0);
+
+				if (this.init instanceof Var) {
+					builder.deleteCharAt(builder.length() - 1);
+					builder.deleteCharAt(builder.length() - 1);
+				}
 			}
 
 			if (this.condition != null) {
@@ -427,6 +432,63 @@ public class Statement extends Ast {
 			} else {
 				builder.append(';');
 			}
+
+			builder.append(") ");
+			this.body.emit(builder, this.body instanceof Expr ? 0 : tabs);
+
+			return tabs;
+		}
+	}
+
+	public static class Var extends Statement {
+		public String type;
+		public String name;
+		public Expression init;
+
+		public Var(String type, String name, Expression init) {
+			this.type = type;
+			this.name = name;
+			this.init = init;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append(this.type).append(' ').append(this.name);
+
+			if (this.init != null) {
+				builder.append(" = ");
+				this.init.emit(builder, tabs);
+			}
+
+			builder.append(";\n");
+			return tabs;
+		}
+	}
+
+	public static class Foreach extends Statement {
+		public Statement init;
+		public Expression in;
+		public Statement body;
+
+		public Foreach(Statement init, Expression in, Statement body) {
+			this.init = init;
+			this.in = in;
+			this.body = body;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("foreach (");
+
+			this.init.emit(builder, 0);
+
+			builder.deleteCharAt(builder.length() - 1);
+			builder.deleteCharAt(builder.length() - 1);
+			builder.append(" in ");
+
+			this.in.emit(builder, tabs);
 
 			builder.append(") ");
 			this.body.emit(builder, this.body instanceof Expr ? 0 : tabs);

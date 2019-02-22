@@ -306,15 +306,26 @@ public class Parser {
 	}
 
 	private Statement parseFor() {
-		Expression init = null;
+		Statement init = null;
 		Expression condition = null;
 		Expression increment = null;
 
 		this.consume(TokenType.LEFT_PAREN, "'(' expected");
 
 		if (!this.match(TokenType.SEMICOLON)) {
-			init = this.parseExpression();
-			this.consume(TokenType.SEMICOLON, "';' expected");
+			if (this.peek().type == TokenType.IDENTIFIER && this.peekNext().type == TokenType.IDENTIFIER) {
+				init = this.parseVariable(false);
+
+				if (this.match(TokenType.COLON)) {
+					condition = this.parseExpression();
+					this.consume(TokenType.RIGHT_PAREN, "')' expected");
+
+					return new Statement.Foreach(init, condition, this.parseStatement());
+				}
+			} else {
+				init = new Statement.Expr(this.parseExpression());
+				this.consume(TokenType.SEMICOLON, "';' expected");
+			}
 		}
 
 		if (!this.match(TokenType.SEMICOLON)) {
@@ -332,9 +343,30 @@ public class Parser {
 		return new Statement.For(init, condition, increment, body);
 	}
 
+	private Statement parseVariable(boolean end) {
+		String type = this.consume(TokenType.IDENTIFIER, "Variable type expected").getLexeme(this.code);
+		String name = this.consume(TokenType.IDENTIFIER, "Variable name expected").getLexeme(this.code);
+		Expression init = null;
+
+		if (end && !this.match(TokenType.SEMICOLON)) {
+			this.consume(TokenType.EQUAL, "'=' expected");
+			init = this.parseExpression();
+
+			if (end) {
+				this.consume(TokenType.SEMICOLON, "';' expected");
+			}
+		}
+
+		return new Statement.Var(type, name, init);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
+		}
+
+		if (this.peek().type == TokenType.IDENTIFIER && this.peekNext().type == TokenType.IDENTIFIER) {
+			return this.parseVariable(true);
 		}
 
 		if (this.match(TokenType.IF)) {

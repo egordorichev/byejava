@@ -409,6 +409,16 @@ public class Parser {
 			return this.parseWhile();
 		}
 
+		if (this.match(TokenType.BREAK)) {
+			this.consume(TokenType.SEMICOLON, "';' expected");
+			return new Statement.Break();
+		}
+
+		if (this.match(TokenType.CONTINUE)) {
+			this.consume(TokenType.SEMICOLON, "';' expected");
+			return new Statement.Continue();
+		}
+
 		Statement statement = new Statement.Expr(this.parseExpression());
 		this.consume(TokenType.SEMICOLON, "';' expected");
 

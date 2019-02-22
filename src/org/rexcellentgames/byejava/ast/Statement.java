@@ -533,4 +533,24 @@ public class Statement extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class Break extends Statement {
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("break;\n");
+
+			return tabs;
+		}
+	}
+
+	public static class Continue extends Statement {
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("continue;\n");
+
+			return tabs;
+		}
+	}
 }

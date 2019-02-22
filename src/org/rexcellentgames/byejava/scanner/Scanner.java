@@ -157,6 +157,8 @@ public class Scanner {
 			case ')': return this.makeToken(TokenType.RIGHT_PAREN);
 			case '{': return this.makeToken(TokenType.LEFT_BRACE);
 			case '}': return this.makeToken(TokenType.RIGHT_BRACE);
+			case '[': return this.makeToken(TokenType.LEFT_BRACKET);
+			case ']': return this.makeToken(TokenType.RIGHT_BRACKET);
 			case ';': return this.makeToken(TokenType.SEMICOLON);
 			case ':': return this.makeToken(TokenType.COLON);
 			case '?': return this.makeToken(TokenType.QUESTION);

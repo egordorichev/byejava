@@ -227,4 +227,24 @@ public class Expression extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class Index extends Expression {
+		public Expression from;
+		public Expression index;
+
+		public Index(Expression from, Expression index) {
+			this.from = from;
+			this.index = index;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			this.from.emit(builder, tabs);
+			builder.append('[');
+			this.index.emit(builder, tabs);
+			builder.append(']');
+
+			return tabs;
+		}
+	}
 }

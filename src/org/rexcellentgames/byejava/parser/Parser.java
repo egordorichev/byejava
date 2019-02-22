@@ -152,6 +152,11 @@ public class Parser {
 				expression = this.finishCall(expression);
 			} else if (this.match(TokenType.DOT)) {
 				expression = new Expression.Get(expression, this.consume(TokenType.IDENTIFIER, "Field name expected").getLexeme(this.code));
+			} else if (this.match(TokenType.LEFT_BRACKET)) {
+				Expression index = this.parseExpression();
+				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+
+				expression = new Expression.Index(expression, index);
 			} else {
 				break;
 			}
@@ -252,7 +257,7 @@ public class Parser {
 		if (this.match(TokenType.EQUAL)) {
 			Expression value = this.parseAssignment();
 
-			if (expression instanceof Expression.Variable) {
+			if (expression instanceof Expression.Variable || expression instanceof Expression.Index) {
 				return new Expression.Assign(expression, value);
 			} else if (expression instanceof Expression.Get) {
 				Expression.Get get = (Expression.Get) expression;

@@ -11,6 +11,8 @@ public class Keywords {
 			if (type.id >= TokenType.CLASS.id && type.id <= TokenType.ABSTRACT.id) {
 				types.put(type.toString().toLowerCase(), type);
 			}
+
+			types.put("@Override", TokenType.OVERRIDE);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 namespace test {
 	public class Test {
-		public void test(params String[] a) {
-			test[getThing()] = '\n';
+		public override void test(params String[] a) {
+			test[getThing()] = 2f;
 		}
 	}
 }

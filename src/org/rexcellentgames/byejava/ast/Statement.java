@@ -176,9 +176,15 @@ public class Statement extends Ast {
 				builder.append("static ");
 			}
 
+			this.insert(builder, tabs);
+
 			builder.append(this.type).append(' ').append(this.name);
 
 			return this.end(builder, tabs);
+		}
+
+		protected void insert(StringBuilder builder, int tabs) {
+
 		}
 
 		protected int end(StringBuilder builder, int tabs) {
@@ -229,12 +235,20 @@ public class Statement extends Ast {
 	public static class Method extends Field {
 		public Block block;
 		public ArrayList<Argument> arguments;
+		public boolean override;
 
 		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments) {
 			super(init, type, name, modifier);
 
 			this.block = block;
 			this.arguments = arguments;
+		}
+
+		@Override
+		protected void insert(StringBuilder builder, int tabs) {
+			if (this.override) {
+				builder.append("override ");
+			}
 		}
 
 		@Override

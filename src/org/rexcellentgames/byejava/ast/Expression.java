@@ -14,26 +14,8 @@ public class Expression extends Ast {
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
-			builder.append(stringify(value));
+			builder.append(value);
 			return tabs;
-		}
-
-		private String stringify(Object object) {
-			if (object == null) {
-				return "null";
-			}
-
-			if (object instanceof Double) {
-				String text = object.toString();
-
-				if (text.endsWith(".0")) {
-					text = text.substring(0, text.length() - 2);
-				}
-
-				return text;
-			}
-
-			return object.toString();
 		}
 	}
 

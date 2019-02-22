@@ -86,7 +86,7 @@ public class Scanner {
 	}
 
 	private static boolean isAlpha(char c) {
-		return c == '_' || Character.isAlphabetic(c);
+		return c == '_' || c == '@' || Character.isAlphabetic(c);
 	}
 
 	private TokenType getIdentifierType() {
@@ -134,6 +134,7 @@ public class Scanner {
 				}
 			}
 
+			this.match('f');
 			return makeToken(TokenType.NUMBER);
 		}
 

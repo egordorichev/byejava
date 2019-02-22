@@ -44,6 +44,7 @@ public enum TokenType {
 	TRY, THROWS,
 	THROW, CATCH,
 	FINALLY, ABSTRACT,
+	OVERRIDE,
 	// Special
 	EOF, ERROR;
 

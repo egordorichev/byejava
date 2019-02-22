@@ -116,7 +116,7 @@ public class Parser {
 		}
 
 		if (this.match(TokenType.NUMBER)) {
-			return new Expression.Literal(Double.parseDouble(this.peekPrevious().getLexeme(this.code)));
+			return new Expression.Literal(this.peekPrevious().getLexeme(this.code));
 		}
 
 		if (this.match(TokenType.IDENTIFIER)) {
@@ -589,6 +589,8 @@ public class Parser {
 		this.consume(TokenType.LEFT_BRACE, "'{' expected");
 
 		while (!this.match(TokenType.RIGHT_BRACE)) {
+			boolean override = this.match(TokenType.OVERRIDE);
+
 			Statement statement = this.parseField();
 
 			if (statement != null) {
@@ -601,6 +603,10 @@ public class Parser {
 				} else if (statement instanceof Statement.Method) {
 					if (methods == null) {
 						methods = new ArrayList<>();
+					}
+
+					if (override) {
+						((Statement.Method) statement).override = true;
 					}
 
 					methods.add((Statement.Method) statement);

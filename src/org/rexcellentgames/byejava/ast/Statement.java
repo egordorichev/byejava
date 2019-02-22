@@ -52,8 +52,9 @@ public class Statement extends Ast {
 		public ArrayList<Block> init;
 		public ArrayList<Statement> inner;
 		public Modifier modifier;
+		public ArrayList<Generetic> generetics;
 
-		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init) {
+		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init, ArrayList<Generetic> generetics) {
 			this.name = name;
 			this.base = base;
 			this.implementations = implementations;
@@ -62,6 +63,7 @@ public class Statement extends Ast {
 			this.inner = inner;
 			this.methods = methods;
 			this.init = init;
+			this.generetics = generetics;
 		}
 
 		@Override
@@ -80,6 +82,20 @@ public class Statement extends Ast {
 			}
 
 			builder.append("class ").append(this.name);
+
+			if (this.generetics != null) {
+				builder.append('<');
+
+				for (int i = 0; i < this.generetics.size(); i++) {
+					builder.append(this.generetics.get(i).name);
+
+					if (i < this.generetics.size() - 1) {
+						builder.append(", ");
+					}
+				}
+
+				builder.append("> ");
+			}
 
 			if (this.base != null || this.implementations != null) {
 				builder.append(" : ");
@@ -102,6 +118,26 @@ public class Statement extends Ast {
 					}
 				}
 			}
+
+			if (this.generetics != null) {
+				boolean had = false;
+
+				for (int i = 0; i < this.generetics.size(); i++) {
+					Generetic generetic = this.generetics.get(i);
+
+					if (generetic.extend == null) {
+						continue;
+					}
+
+					if (had) {
+						builder.append(' ');
+					}
+
+					had = true;
+					builder.append("where ").append(generetic.name).append(" : ").append(generetic.extend);
+				}
+			}
+
 
 			builder.append(" {\n");
 			tabs++;
@@ -539,20 +575,34 @@ public class Statement extends Ast {
 	}
 
 	public static class Var extends Statement {
-		public String type;
-		public String name;
+		public Argument self;
 		public Expression init;
 
-		public Var(String type, String name, Expression init) {
-			this.type = type;
-			this.name = name;
+		public Var(Argument self, Expression init) {
+			this.self = self;
 			this.init = init;
 		}
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			indent(builder, tabs);
-			builder.append(this.type).append(' ').append(this.name);
+			builder.append(this.self.type);
+
+			if (this.self.generetics != null) {
+				builder.append('<');
+
+				for (int i = 0; i < this.self.generetics.size(); i++) {
+					builder.append(this.self.generetics.get(i).name);
+
+					if (i < this.self.generetics.size() - 1) {
+						builder.append(", ");
+					}
+				}
+
+				builder.append('>');
+			}
+
+			builder.append(' ').append(this.self.name);
 
 			if (this.init != null) {
 				builder.append(" = ");

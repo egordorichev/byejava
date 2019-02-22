@@ -205,7 +205,13 @@ public class Statement extends Ast {
 			tabs++;
 
 			if (this.statements != null) {
-				for (Statement statement : this.statements) {
+				for (int i = 0; i < this.statements.size(); i++) {
+					Statement statement = this.statements.get(i);
+
+					if (i > 0 && this.statements.get(i - 1) instanceof Expr != statement instanceof Expr) {
+						builder.append('\n');
+					}
+
 					tabs = statement.emit(builder, tabs);
 				}
 			} else {
@@ -326,6 +332,68 @@ public class Statement extends Ast {
 			}
 
 			builder.append(";\n");
+			return tabs;
+		}
+	}
+
+	public static class If extends Statement {
+		public Expression ifCondition;
+		public Statement ifBranch;
+		public ArrayList<Expression> ifElseConditions;
+		public ArrayList<Statement> ifElseBranches;
+		public Statement elseBranch;
+
+		public If(Expression ifCondition, Statement ifBranch, ArrayList<Expression> ifElseConditions, ArrayList<Statement> ifElseBranches, Statement elseBranch) {
+			this.ifCondition = ifCondition;
+			this.ifBranch = ifBranch;
+			this.ifElseConditions = ifElseConditions;
+			this.ifElseBranches = ifElseBranches;
+			this.elseBranch = elseBranch;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("if ");
+			tabs = this.ifCondition.emit(builder, tabs);
+			builder.append(' ');
+			tabs = this.ifBranch.emit(builder, tabs);
+
+			if (!(this.ifBranch instanceof Block)) {
+				builder.append('\n');
+				indent(builder, tabs);
+			} else {
+				builder.deleteCharAt(builder.length() - 1);
+				builder.append(' ');
+			}
+
+			if (this.ifElseConditions != null) {
+				for (int i = 0; i < this.ifElseConditions.size(); i++) {
+					builder.append("else if ");
+					tabs = this.ifElseConditions.get(i).emit(builder, tabs);
+					builder.append(' ');
+					Statement branch = this.ifElseBranches.get(i);
+					tabs = branch.emit(builder, tabs);
+
+					if (!(branch instanceof Block)) {
+						builder.append('\n');
+						indent(builder, tabs);
+					} else {
+						builder.deleteCharAt(builder.length() - 1);
+						builder.append(' ');
+					}
+				}
+			}
+
+			if (this.elseBranch != null) {
+				builder.append("else ");
+				tabs = this.elseBranch.emit(builder, tabs);
+
+				if (!(this.elseBranch instanceof Block)) {
+					builder.append('\n');
+				}
+			}
+
 			return tabs;
 		}
 	}

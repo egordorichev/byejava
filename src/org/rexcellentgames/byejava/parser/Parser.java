@@ -120,6 +120,12 @@ public class Parser {
 			return new Expression.Variable(this.peekPrevious().getLexeme(this.code));
 		}
 
+		if (this.match(TokenType.LEFT_PAREN)) {
+			Expression expression = this.parseExpression();
+			this.consume(TokenType.RIGHT_PAREN, "')' expected");
+			return new Expression.Grouping(expression);
+		}
+
 		this.error("Unexpected token " + this.peek().type);
 		return null;
 	}
@@ -264,9 +270,38 @@ public class Parser {
 		return new Statement.Return(value);
 	}
 
+	private Statement parseIf() {
+		Expression ifCondition = this.parseExpression();
+		Statement ifBranch = this.parseStatement();
+		ArrayList<Expression> ifElseConditions = null;
+		ArrayList<Statement> ifElseBranches = null;
+		Statement elseBranch = null;
+
+		while (this.match(TokenType.ELSE)) {
+			if (this.match(TokenType.IF)) {
+				if (ifElseBranches == null) {
+					ifElseConditions = new ArrayList<>();
+					ifElseBranches = new ArrayList<>();
+				}
+
+				ifElseConditions.add(this.parseExpression());
+				ifElseBranches.add(this.parseStatement());
+			} else {
+				elseBranch = this.parseStatement();
+				break;
+			}
+		}
+
+		return new Statement.If(ifCondition, ifBranch, ifElseConditions, ifElseBranches, elseBranch);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
+		}
+
+		if (this.match(TokenType.IF)) {
+			return this.parseIf();
 		}
 
 		if (this.match(TokenType.RETURN)) {

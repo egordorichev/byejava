@@ -182,4 +182,21 @@ public class Expression extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class Grouping extends Expression {
+		public Expression expression;
+
+		public Grouping(Expression expression) {
+			this.expression = expression;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append('(');
+			tabs = this.expression.emit(builder, tabs);
+			builder.append(')');
+
+			return tabs;
+		}
+	}
 }

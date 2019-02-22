@@ -8,6 +8,14 @@ namespace test {
 			getThing("hello", 4);
 			test.a = 32;
 			b = 19;
+
+			if (true) {
+				thing();
+			} else if (false) {
+				dudeWhatsUp();
+			} else {
+				mathIsWrong();
+			}
 		}
 	}
 }

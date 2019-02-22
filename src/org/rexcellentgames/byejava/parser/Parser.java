@@ -422,6 +422,54 @@ public class Parser {
 		return new Statement.While(condition, body, false);
 	}
 
+	private Statement parseSwitch() {
+		this.consume(TokenType.LEFT_PAREN, "'(' expected");
+		Expression what = this.parseExpression();
+		this.consume(TokenType.RIGHT_PAREN, "')' expected");
+		this.consume(TokenType.LEFT_BRACE, "'{' expected");
+
+		ArrayList<Statement.SwitchBranch> branches = null;
+
+		while (!this.match(TokenType.RIGHT_BRACE)) {
+			if (branches == null) {
+				branches = new ArrayList<>();
+			}
+
+			Statement.SwitchBranch branch = new Statement.SwitchBranch();
+			branches.add(branch);
+
+			while (true) {
+				if (branch.cases == null) {
+					branch.cases = new ArrayList<>();
+				}
+
+				if (!this.match(TokenType.DEFAULT)) {
+					this.consume(TokenType.CASE, "'case' expected");
+					branch.cases.add(this.parseExpression());
+				} else {
+					branch.cases.add(null);
+				}
+
+				this.consume(TokenType.COLON, "':' expected");
+
+				if (this.peek().type != TokenType.CASE && this.peek().type != TokenType.DEFAULT) {
+					if (this.match(TokenType.LEFT_BRACE)) {
+						branch.block = (Statement.Block) this.parseBlock();
+					} else {
+						ArrayList<Statement> list = new ArrayList<>();
+						list.add(this.parseStatement());
+
+						branch.block = new Statement.Block(list);
+					}
+
+					break;
+				}
+			}
+		}
+
+		return new Statement.Switch(branches, what);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
@@ -429,6 +477,10 @@ public class Parser {
 
 		if (this.peek().type == TokenType.IDENTIFIER && this.peekNext().type == TokenType.IDENTIFIER) {
 			return this.parseVariable(true);
+		}
+
+		if (this.match(TokenType.SWITCH)) {
+			return this.parseSwitch();
 		}
 
 		if (this.match(TokenType.IF)) {

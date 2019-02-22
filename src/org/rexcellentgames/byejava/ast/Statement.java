@@ -287,6 +287,10 @@ public class Statement extends Ast {
 						builder.append('\n');
 					}
 
+					if (statement instanceof Block) {
+						indent(builder, tabs);
+					}
+
 					tabs = statement.emit(builder, tabs);
 				}
 			} else {
@@ -659,6 +663,66 @@ public class Statement extends Ast {
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			builder.append("using ").append(this.module).append(";\n");
+			return tabs;
+		}
+	}
+
+	public static class SwitchBranch {
+		public Block block;
+		public ArrayList<Expression> cases;
+	}
+
+	public static class Switch extends Statement {
+		public ArrayList<SwitchBranch> branches;
+		public Expression what;
+
+		public Switch(ArrayList<SwitchBranch> branches, Expression what) {
+			this.branches = branches;
+			this.what = what;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("switch (");
+			this.what.emit(builder, tabs);
+			builder.append(") {\n");
+			tabs++;
+
+			if (this.branches != null) {
+				for (int i = 0; i < this.branches.size(); i++) {
+					SwitchBranch branch = this.branches.get(i);
+
+					for (int j = 0; j < branch.cases.size(); j++) {
+						Expression expression = branch.cases.get(j);
+
+						indent(builder, tabs);
+
+						if (expression == null) {
+							builder.append("default:");
+						} else {
+							builder.append("case ");
+							expression.emit(builder, 0);
+							builder.append(": ");
+						}
+
+						if (j < branch.cases.size() - 1) {
+							builder.append('\n');
+						}
+					}
+
+					branch.block.emit(builder, tabs);
+
+					if (i < this.branches.size() - 1) {
+						builder.append('\n');
+					}
+				}
+			}
+
+			tabs--;
+			indent(builder, tabs);
+			builder.append("}\n");
+
 			return tabs;
 		}
 	}

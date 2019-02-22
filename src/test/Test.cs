@@ -1,31 +1,19 @@
-using a;
-using b;
-using m.n;
-
 namespace test {
 	public class Test {
-		protected void _Init() {
-			{
-				c = 32;
+		public void test() {
+			switch (10) {
+				case 1: 
+				case 2: {
+					test();
+
+					break;
+				}
+
+				default:
+				case 32: {
+					testa();
+				}
 			}
-
-			{
-				d = 32;
-			}
-		}
-
-		static Test() {
-			a = 32;
-		}
-
-		public Test() {
-			_Init();
-		}
-
-		public Test(int a) {
-			_Init();
-			this.a = a;
-			thing.a = 32;
 		}
 	}
 }

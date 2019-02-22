@@ -647,4 +647,19 @@ public class Statement extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class Import extends Statement {
+		public String module;
+
+		public Import(String module) {
+			int dot = module.lastIndexOf('.');
+			this.module = dot == -1 ? module : module.substring(0, dot);
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append("using ").append(this.module).append(";\n");
+			return tabs;
+		}
+	}
 }

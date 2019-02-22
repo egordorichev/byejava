@@ -1,5 +1,10 @@
 package test;
 
+import a.b;
+import a.c;
+import b.*;
+import m.n.c;
+
 public class Test {
 	static {
 		a = 32;

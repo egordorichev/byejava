@@ -94,6 +94,31 @@ public class Parser {
 		return new Statement.Package(builder.toString());
 	}
 
+	private Statement parseImportStatement() {
+		StringBuilder builder = new StringBuilder();
+
+		while (true) {
+			if (builder.length() > 0) {
+				if (!this.match(TokenType.DOT)) {
+					break;
+				}
+
+				builder.append('.');
+			}
+
+			if (this.match(TokenType.STAR)) {
+				builder.append('*');
+				break;
+			}
+
+			Token name = this.consume(TokenType.IDENTIFIER, "Package name expected");
+			builder.append(name.getLexeme(this.code));
+		}
+
+		this.consume(TokenType.SEMICOLON, "';' expected");
+		return new Statement.Import(builder.toString());
+	}
+
 	private Expression parsePrimary() {
 		if (this.match(TokenType.FALSE)) {
 			return new Expression.Literal(false);
@@ -738,6 +763,10 @@ public class Parser {
 
 		if (this.match(TokenType.PACKAGE)) {
 			this.tryAdd(statements, this.parsePackageStatement());
+		}
+
+		while (this.match(TokenType.IMPORT)) {
+			this.tryAdd(statements, this.parseImportStatement());
 		}
 
 		while (!this.isAtEnd()) {

@@ -20,16 +20,39 @@ public class Emitter {
 		this.builder = new StringBuilder();
 		int tabs = 0;
 		Statement packageStatement = null;
+		ArrayList<Statement.Import> imports = new ArrayList<>();
 
 		for (Statement statement : this.ast) {
 			if (statement instanceof Statement.Package) {
-				tabs = statement.emit(builder, tabs);
 				packageStatement = statement;
+			} else if (statement instanceof Statement.Import) {
+				Statement.Import im = (Statement.Import) statement;
+				boolean found = false;
+
+				for (Statement.Import i : imports) {
+					if (i.module.equals(im.module)) {
+						found = true;
+						break;
+					}
+				}
+
+				if (!found) {
+					imports.add(im);
+					im.emit(builder, tabs);
+				}
 			}
 		}
 
+		if (imports.size() > 0) {
+			builder.append('\n');
+		}
+
+		if (packageStatement != null) {
+			tabs = packageStatement.emit(builder, tabs);
+		}
+
 		for (Statement statement : this.ast) {
-			if (statement != packageStatement) {
+			if (statement != packageStatement && !(statement instanceof Statement.Import)) {
 				tabs = statement.emit(this.builder, tabs);
 			}
 		}

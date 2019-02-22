@@ -1,3 +1,7 @@
+using a;
+using b;
+using m.n;
+
 namespace test {
 	public class Test {
 		protected void _Init() {

@@ -345,12 +345,14 @@ public class Statement extends Ast {
 		public Block block;
 		public ArrayList<Argument> arguments;
 		public boolean override;
+		public ArrayList<Generetic> generetics;
 
-		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments) {
+		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments, ArrayList<Generetic> generetics) {
 			super(init, type, name, modifier);
 
 			this.block = block;
 			this.arguments = arguments;
+			this.generetics = generetics;
 		}
 
 		@Override
@@ -362,6 +364,20 @@ public class Statement extends Ast {
 
 		@Override
 		protected int end(StringBuilder builder, int tabs) {
+			if (this.generetics != null) {
+				builder.append('<');
+
+				for (int i = 0; i < this.generetics.size(); i++) {
+					builder.append(this.generetics.get(i).name);
+
+					if (i < this.generetics.size() - 1) {
+						builder.append(", ");
+					}
+				}
+
+				builder.append("> ");
+			}
+
 			builder.append('(');
 
 			if (this.arguments != null) {

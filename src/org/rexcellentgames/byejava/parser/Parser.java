@@ -118,6 +118,26 @@ public class Parser {
 		return new Statement.Import(builder.toString());
 	}
 
+	private ArrayList<Generetic> parseVarGenerics(boolean consumed) {
+		ArrayList<Generetic> generetics = null;
+
+		if (consumed || this.match(TokenType.LESS)) {
+			generetics = new ArrayList<>();
+
+			while (!this.match(TokenType.GREATER)) {
+				Generetic generetic = new Generetic();
+				generetic.name = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+				generetics.add(generetic);
+
+				if (this.peek().type != TokenType.GREATER) {
+					this.consume(TokenType.COMMA, "',' expected");
+				}
+			}
+		}
+
+		return generetics;
+	}
+
 	private Expression parsePrimary() {
 		if (this.match(TokenType.FALSE)) {
 			return new Expression.Literal(false);
@@ -143,8 +163,13 @@ public class Parser {
 			return new Expression.Literal(this.peekPrevious().getLexeme(this.code));
 		}
 
+		if (this.match(TokenType.NEW)) {
+			this.consume(TokenType.IDENTIFIER, "Class name expected");
+			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
+		}
+
 		if (this.match(TokenType.IDENTIFIER)) {
-			return new Expression.Variable(this.peekPrevious().getLexeme(this.code));
+			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), false);
 		}
 
 		if (this.match(TokenType.LEFT_PAREN)) {
@@ -188,7 +213,7 @@ public class Parser {
 
 			if (construct || this.match(TokenType.LEFT_PAREN)) {
 				if (construct) {
-					this.consume(T)
+					this.consume(TokenType.LEFT_PAREN, "'(' expected");
 				}
 
 				expression = this.finishCall(expression);
@@ -630,6 +655,7 @@ public class Parser {
 	private Statement parseField() {
 		Modifier modifier = new Modifier();
 		boolean found = false;
+		ArrayList<Generetic> gen = null;
 
 		while (true) {
 			TokenType type = this.advance().type;
@@ -643,6 +669,11 @@ public class Parser {
 				case ABSTRACT: modifier.isAbstract = true; break;
 
 				default: {
+					if (type == TokenType.LESS) {
+						gen = this.parseVarGenerics(true);
+						this.advance();
+					}
+
 					found = true;
 					break;
 				}
@@ -718,7 +749,7 @@ public class Parser {
 				this.consume(TokenType.LEFT_BRACE, "'{' expected");
 			}
 
-			return new Statement.Method(null, type, name, modifier, modifier.isAbstract ? null : (Statement.Block) this.parseBlock(), arguments);
+			return new Statement.Method(null, type, name, modifier, modifier.isAbstract ? null : (Statement.Block) this.parseBlock(), arguments, gen);
 		}
 
 		this.consume(TokenType.SEMICOLON, "';' expected");

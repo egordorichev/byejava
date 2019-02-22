@@ -21,14 +21,37 @@ public class Expression extends Ast {
 
 	public static class Variable extends Expression {
 		public String name;
+		public ArrayList<Generetic> generetics;
+		public boolean construct;
 
-		public Variable(String name) {
+		public Variable(String name, ArrayList<Generetic> generetics, boolean construct) {
 			this.name = name;
+			this.generetics = generetics;
+			this.construct = construct;
 		}
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
+			if (this.construct) {
+				builder.append("new ");
+			}
+
 			builder.append(this.name);
+
+			if (this.generetics != null) {
+				builder.append('<');
+
+				for (int i = 0; i < this.generetics.size(); i++) {
+					builder.append(this.generetics.get(i).name);
+
+					if (i < this.generetics.size() - 1) {
+						builder.append(", ");
+					}
+				}
+
+				builder.append('>');
+			}
+
 			return tabs;
 		}
 	}

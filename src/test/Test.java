@@ -14,10 +14,15 @@ public class Test {
 	}
 
 	public Test() {
-
+		// This is a comment
 	}
 
 	public Test(int a) {
 		this.a = a;
+
+		/*
+		 * This is also a comment
+		 */
+		thing.a = 32;
 	}
 }

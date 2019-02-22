@@ -21,6 +21,7 @@ namespace test {
 		public Test(int a) {
 			_Init();
 			this.a = a;
+			thing.a = 32;
 		}
 	}
 }

@@ -77,6 +77,28 @@ public class Scanner {
 					continue;
 				}
 
+				case '/': {
+					if (this.peekNext() == '/') {
+						while (this.peek() != '\n' && this.peek() != '\0') {
+							this.advance();
+						}
+
+						continue;
+					} else if (this.peekNext() == '*') {
+						this.advance();
+						this.advance();
+
+						while (!(this.peek() == '*' && this.peekNext() == '/') && this.peek() != '\0') {
+							this.advance();
+						}
+
+						this.advance();
+						this.advance();
+
+						continue;
+					}
+				}
+
 				default: {
 					this.start = this.position;
 					return;

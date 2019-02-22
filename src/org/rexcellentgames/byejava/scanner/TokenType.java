@@ -1,5 +1,8 @@
 package org.rexcellentgames.byejava.scanner;
 
+import com.sun.org.apache.bcel.internal.generic.NEW;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
 public enum TokenType {
 	// Values
 	IDENTIFIER, STRING, NUMBER,
@@ -17,6 +20,7 @@ public enum TokenType {
 	STAR, STAR_EQUAL,
 	MINUS, MINUS_EQUAL,
 	PLUS, PLUS_EQUAL,
+	PLUS_PLUS, MINUS_MINUS,
 	EQUAL, EQUAL_EQUAL,
 	GREATER, GREATER_EQUAL,
 	LESS, LESS_EQUAL,

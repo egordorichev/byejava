@@ -208,7 +208,7 @@ public class Statement extends Ast {
 				for (int i = 0; i < this.statements.size(); i++) {
 					Statement statement = this.statements.get(i);
 
-					if (i > 0 && this.statements.get(i - 1) instanceof Expr != statement instanceof Expr) {
+					if (i > 0 && !(this.statements.get(i - 1) instanceof Expr && statement instanceof Expr)) {
 						builder.append('\n');
 					}
 
@@ -357,10 +357,9 @@ public class Statement extends Ast {
 			builder.append("if ");
 			tabs = this.ifCondition.emit(builder, tabs);
 			builder.append(' ');
-			tabs = this.ifBranch.emit(builder, tabs);
+			this.ifBranch.emit(builder, this.ifBranch instanceof Expr ? 0 : tabs);
 
 			if (!(this.ifBranch instanceof Block)) {
-				builder.append('\n');
 				indent(builder, tabs);
 			} else {
 				builder.deleteCharAt(builder.length() - 1);
@@ -373,10 +372,9 @@ public class Statement extends Ast {
 					tabs = this.ifElseConditions.get(i).emit(builder, tabs);
 					builder.append(' ');
 					Statement branch = this.ifElseBranches.get(i);
-					tabs = branch.emit(builder, tabs);
+					branch.emit(builder, branch instanceof Expr ? 0 : tabs);
 
 					if (!(branch instanceof Block)) {
-						builder.append('\n');
 						indent(builder, tabs);
 					} else {
 						builder.deleteCharAt(builder.length() - 1);
@@ -387,12 +385,51 @@ public class Statement extends Ast {
 
 			if (this.elseBranch != null) {
 				builder.append("else ");
-				tabs = this.elseBranch.emit(builder, tabs);
-
-				if (!(this.elseBranch instanceof Block)) {
-					builder.append('\n');
-				}
+				this.elseBranch.emit(builder, this.elseBranch instanceof Expr ? 0 : tabs);
 			}
+
+			return tabs;
+		}
+	}
+
+	public static class For extends Statement {
+		public Expression init;
+		public Expression condition;
+		public Expression increment;
+		public Statement body;
+
+		public For(Expression init, Expression condition, Expression increment, Statement body) {
+			this.init = init;
+			this.condition = condition;
+			this.increment = increment;
+			this.body = body;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("for (");
+
+			if (this.init != null) {
+				init.emit(builder, tabs);
+			}
+
+			if (this.condition != null) {
+				builder.append("; ");
+				condition.emit(builder, tabs);
+			} else {
+				builder.append(';');
+			}
+
+			if (this.increment != null) {
+				builder.append("; ");
+				increment.emit(builder, tabs);
+			} else {
+				builder.append(';');
+			}
+
+			builder.append(") ");
+			this.body.emit(builder, this.body instanceof Expr ? 0 : tabs);
 
 			return tabs;
 		}

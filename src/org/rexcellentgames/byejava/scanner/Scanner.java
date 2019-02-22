@@ -18,6 +18,7 @@ public class Scanner {
 		this.position = 0;
 		this.start = 0;
 		this.ended = false;
+		this.line = 1;
 	}
 
 	protected Token makeToken(TokenType type) {
@@ -25,7 +26,7 @@ public class Scanner {
 	}
 
 	protected Token error(String error) {
-		return new ErrorToken(TokenType.ERROR, this.position, this.position, this.line, error);
+		return new ErrorToken(TokenType.ERROR, this.position, this.position, this.line, String.format("[line %d] %s", this.line, error));
 	}
 
 	protected char advance() {
@@ -161,8 +162,8 @@ public class Scanner {
 			case '?': return this.makeToken(TokenType.QUESTION);
 			case ',': return this.makeToken(TokenType.COMMA);
 			case '=': return this.decideToken('=', TokenType.EQUAL_EQUAL, TokenType.EQUAL);
-			case '-': return this.decideToken('=', TokenType.MINUS_EQUAL, TokenType.MINUS);
-			case '+': return this.decideToken('=', TokenType.PLUS_EQUAL, TokenType.PLUS);
+			case '-': return this.decideToken('=', TokenType.MINUS_EQUAL, '-', TokenType.MINUS_MINUS, TokenType.MINUS);
+			case '+': return this.decideToken('=', TokenType.PLUS_EQUAL, '+', TokenType.PLUS_PLUS, TokenType.PLUS);
 			case '/': return this.decideToken('=', TokenType.SLASH_EQUAL, TokenType.SLASH);
 			case '%': return this.decideToken('=', TokenType.PERCENT_EQUAL, TokenType.PERCENT);
 			case '*': return this.decideToken('=', TokenType.STAR_EQUAL, TokenType.STAR);

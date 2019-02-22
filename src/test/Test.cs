@@ -1,21 +1,11 @@
 namespace test {
-	public class Test : A, B, C {
-		public String getThing(String thing, int a) {
-			return thing + -32 / a;
-		}
-
+	public class Test {
 		public void test() {
-			getThing("hello", 4);
-			test.a = 32;
-			b = 19;
-
-			if (true) {
+			for (i = 0; i < 10; i++) {
 				thing();
-			} else if (false) {
-				dudeWhatsUp();
-			} else {
-				mathIsWrong();
 			}
+
+			for (;;) duuude();
 		}
 	}
 }

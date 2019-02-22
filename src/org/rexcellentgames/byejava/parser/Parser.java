@@ -62,8 +62,7 @@ public class Parser {
 	}
 
 	private void error(String message) {
-		System.out.println(message);
-		// todo: sync
+		System.out.println(String.format("[line %d] %s", this.peek().line, message));
 	}
 
 	private Token consume(TokenType type, String error) {
@@ -161,13 +160,24 @@ public class Parser {
 		return expression;
 	}
 
+	private Expression parseDeunary() {
+		Expression expression = this.parseCall();
+
+		if (this.match(TokenType.MINUS_MINUS, TokenType.PLUS_PLUS)) {
+			TokenType operator = this.peekPrevious().type;
+			expression = new Expression.Deunary(operator, expression);
+		}
+
+		return expression;
+	}
+
 	private Expression parseUnary() {
 		if (this.match(TokenType.MINUS, TokenType.BANG)) {
 			TokenType operator = this.peekPrevious().type;
 			return new Expression.Unary(operator, this.parseUnary());
 		}
 
-		return this.parseCall();
+		return this.parseDeunary();
 	}
 
 	private Expression parseMultiplication() {
@@ -195,7 +205,7 @@ public class Parser {
 	private Expression parseComparison() {
 		Expression expression = this.parseAddition();
 
-		while (this.match(TokenType.GREATER_EQUAL, TokenType.LESS_EQUAL)) {
+		while (this.match(TokenType.GREATER_EQUAL, TokenType.LESS_EQUAL, TokenType.GREATER, TokenType.LESS)) {
 			TokenType operator = this.peekPrevious().type;
 			expression = new Expression.Binary(operator, expression, this.parseAddition());
 		}
@@ -295,6 +305,33 @@ public class Parser {
 		return new Statement.If(ifCondition, ifBranch, ifElseConditions, ifElseBranches, elseBranch);
 	}
 
+	private Statement parseFor() {
+		Expression init = null;
+		Expression condition = null;
+		Expression increment = null;
+
+		this.consume(TokenType.LEFT_PAREN, "'(' expected");
+
+		if (!this.match(TokenType.SEMICOLON)) {
+			init = this.parseExpression();
+			this.consume(TokenType.SEMICOLON, "';' expected");
+		}
+
+		if (!this.match(TokenType.SEMICOLON)) {
+			condition = this.parseExpression();
+			this.consume(TokenType.SEMICOLON, "';' expected");
+		}
+
+		if (!this.match(TokenType.RIGHT_PAREN)) {
+			increment = this.parseExpression();
+			this.consume(TokenType.RIGHT_PAREN, "')' expected");
+		}
+
+		Statement body = this.parseStatement();
+
+		return new Statement.For(init, condition, increment, body);
+	}
+
 	private Statement parseStatement() {
 		if (this.match(TokenType.LEFT_BRACE)) {
 			return this.parseBlock();
@@ -302,6 +339,10 @@ public class Parser {
 
 		if (this.match(TokenType.IF)) {
 			return this.parseIf();
+		}
+
+		if (this.match(TokenType.FOR)) {
+			return this.parseFor();
 		}
 
 		if (this.match(TokenType.RETURN)) {

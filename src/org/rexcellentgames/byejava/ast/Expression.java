@@ -71,6 +71,28 @@ public class Expression extends Ast {
 		}
 	}
 
+	public static class Deunary extends Expression {
+		public Expression left;
+		public TokenType operator;
+
+		public Deunary(TokenType operator, Expression left) {
+			this.operator = operator;
+			this.left = left;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			tabs = this.left.emit(builder, tabs);
+
+			switch (this.operator) {
+				case MINUS_MINUS: builder.append("--"); break;
+				case PLUS_PLUS: builder.append("++"); break;
+			}
+
+			return tabs;
+		}
+	}
+
 	public static class Binary extends Expression {
 		public TokenType operator;
 		public Expression left;
@@ -92,6 +114,12 @@ public class Expression extends Ast {
 				case SLASH: builder.append(" / "); break;
 				case STAR: builder.append(" * "); break;
 				case PERCENT: builder.append(" % "); break;
+				case EQUAL_EQUAL: builder.append(" == "); break;
+				case BANG_EQUAL: builder.append(" != "); break;
+				case LESS_EQUAL: builder.append(" <= "); break;
+				case GREATER_EQUAL: builder.append(" >= "); break;
+				case GREATER: builder.append(" > "); break;
+				case LESS: builder.append(" < "); break;
 			}
 
 			return this.right.emit(builder, tabs);

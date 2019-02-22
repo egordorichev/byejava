@@ -1,7 +1,10 @@
 package test;
 
-public class Test {
+import java.util.ArrayList;
+
+public class Test<T extends A> {
 	public void test() {
-		int a = true ? 10 : 20;
+		ArrayList<T> list = new ArrayList<>();
+		// todo: type casts
 	}
 }

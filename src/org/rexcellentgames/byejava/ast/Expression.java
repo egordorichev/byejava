@@ -245,4 +245,27 @@ public class Expression extends Ast {
 			return tabs;
 		}
 	}
+
+	public static class If extends Expression {
+		public Expression condition;
+		public Expression ifBranch;
+		public Expression elseBranch;
+
+		public If(Expression condition, Expression ifBranch, Expression elseBranch) {
+			this.condition = condition;
+			this.ifBranch = ifBranch;
+			this.elseBranch = elseBranch;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			this.condition.emit(builder, tabs);
+			builder.append(" ? ");
+			this.ifBranch.emit(builder, tabs);
+			builder.append(" : ");
+			this.elseBranch.emit(builder, tabs);
+
+			return tabs;
+		}
+	}
 }

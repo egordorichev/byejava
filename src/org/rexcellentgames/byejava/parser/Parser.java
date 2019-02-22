@@ -308,7 +308,17 @@ public class Parser {
 	}
 
 	private Expression parseExpression() {
-		return this.parseAssignment();
+		Expression expression = this.parseAssignment();
+
+		if (this.match(TokenType.QUESTION)) {
+			Expression ifBranch = this.parseExpression();
+			this.consume(TokenType.COLON, "':' expected");
+			Expression elseBranch = this.parseExpression();
+
+			expression = new Expression.If(expression, ifBranch, elseBranch);
+		}
+
+		return expression;
 	}
 
 	private Statement parseReturn() {

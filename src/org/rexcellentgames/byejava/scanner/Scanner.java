@@ -207,6 +207,20 @@ public class Scanner {
 				return makeToken(TokenType.STRING);
 			}
 
+			case '\'': {
+				if (this.advance() == '\\') {
+					this.advance();
+				}
+
+				c = this.advance();
+
+				if (c != '\'') {
+					return this.error("' expected");
+				}
+
+				return makeToken(TokenType.CHAR);
+			}
+
 			default: return error(String.format("Unexpected char '%c'", c));
 		}
 	}

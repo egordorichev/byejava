@@ -1,13 +1,8 @@
 package org.rexcellentgames.byejava.scanner;
 
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
-import com.sun.org.apache.bcel.internal.generic.NEW;
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-import com.sun.org.apache.bcel.internal.generic.SWITCH;
-
 public enum TokenType {
 	// Values
-	IDENTIFIER, STRING, NUMBER,
+	IDENTIFIER, STRING, NUMBER, CHAR,
 	// Single-character tokens.
 	LEFT_PAREN, RIGHT_PAREN,
 	LEFT_BRACE, RIGHT_BRACE,

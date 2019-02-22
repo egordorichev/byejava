@@ -111,6 +111,10 @@ public class Parser {
 			return new Expression.Literal(this.peekPrevious().getLexeme(this.code));
 		}
 
+		if (this.match(TokenType.CHAR)) {
+			return new Expression.Literal(this.peekPrevious().getLexeme(this.code));
+		}
+
 		if (this.match(TokenType.NUMBER)) {
 			return new Expression.Literal(Double.parseDouble(this.peekPrevious().getLexeme(this.code)));
 		}

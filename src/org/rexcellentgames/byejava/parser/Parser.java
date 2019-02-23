@@ -925,6 +925,11 @@ public class Parser {
 				}
 			}
 
+			if (this.match(TokenType.THROWS)) {
+				this.consume(TokenType.IDENTIFIER, "Exception name expected");
+				// Ignored
+			}
+
 			if (modifier.isAbstract) {
 				this.consume(TokenType.SEMICOLON, "';' expected");
 			} else {

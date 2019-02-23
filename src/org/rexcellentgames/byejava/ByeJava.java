@@ -12,9 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class ByeJava {
-	private static String getSource() {
+	private static String getSource(String file) {
 		try {
-			return new String(Files.readAllBytes(Paths.get("src/test/Test.java")), Charset.defaultCharset());
+			return new String(Files.readAllBytes(Paths.get(file)), Charset.defaultCharset());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -23,15 +23,42 @@ public class ByeJava {
 	}
 
 	public static void main(String[] args) {
-		String code = getSource();
+		if (args.length != 2) {
+			System.out.println("byejava [input] [output]");
+			return;
+		}
+
+		// todo: support directories
+		long ms = System.currentTimeMillis();
+
+		if (!compileFile(args[0], args[1])) {
+			System.out.println("Failed to compile " + args[1]);
+		} else {
+			System.out.println(args[1] + " compiled in " + (System.currentTimeMillis() - ms) + " ms");
+		}
+	}
+
+	public static boolean compileFile(String in, String to) {
+		String code = getSource(in);
 		Scanner scanner = new Scanner(code);
 		Parser parser = new Parser(scanner.scan(), code);
+
+		if (scanner.hadError) {
+			return false;
+		}
+
 		Emitter emitter = new Emitter(parser.parse());
 
-		try (PrintWriter out = new PrintWriter("src/test/Test.cs")) {
+		if (parser.hadError) {
+			return false;
+		}
+
+		try (PrintWriter out = new PrintWriter(to)) {
 			out.println(emitter.emit());
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+
+		return true;
 	}
 }

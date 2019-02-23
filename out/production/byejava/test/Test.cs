@@ -1,84 +1,15 @@
-namespace org.rexcellentgames.byejava.scanner {
-	enum TokenType {
-		CLASS,
-		NEW,
-		IMPLEMENTS,
-		EXTENDS,
-		ENUM,
-		NULL,
-		RETURN,
-		SUPER,
-		THIS,
-		TRUE,
-		FALSE,
-		WHILE,
-		DO,
-		FOR,
-		BREAK,
-		CONTINUE,
-		IF,
-		ELSE,
-		SWITCH,
-		DEFAULT,
-		CASE,
-		INSTANCEOF,
-		PUBLIC,
-		PROTECTED,
-		PRIVATE,
-		STATIC,
-		FINAL,
-		PACKAGE,
-		IMPORT,
-		TRY,
-		THROWS,
-		THROW,
-		CATCH,
-		FINALLY,
-		ABSTRACT,
-		OVERRIDE,
-		IDENTIFIER,
-		STRING,
-		NUMBER,
-		CHAR,
-		LEFT_PAREN,
-		RIGHT_PAREN,
-		LEFT_BRACE,
-		RIGHT_BRACE,
-		LEFT_BRACKET,
-		RIGHT_BRACKET,
-		COMMA,
-		DOT,
-		DOT_DOT_DOT,
-		COLON,
-		SEMICOLON,
-		QUESTION,
-		BANG,
-		BANG_EQUAL,
-		SLASH,
-		SLASH_EQUAL,
-		PERCENT,
-		PERCENT_EQUAL,
-		STAR,
-		STAR_EQUAL,
-		MINUS,
-		MINUS_EQUAL,
-		PLUS,
-		PLUS_EQUAL,
-		PLUS_PLUS,
-		MINUS_MINUS,
-		EQUAL,
-		EQUAL_EQUAL,
-		GREATER,
-		GREATER_EQUAL,
-		LESS,
-		LESS_EQUAL,
-		AMPERSAND,
-		AMPERSAND_EQUAL,
-		AND,
-		BAR,
-		BAR_EQUAL,
-		OR,
-		EOF,
-		ERROR
+namespace test {
+	public class Test {
+		protected void _Init() {
+			{
+				Tween.to(new Tween.Task(0, 2f) {
+					public override void onEnd() {
+						Camera.follow(Player.instance, false);
+					}
+				});
+			}
+		}
+
+
 	}
 }

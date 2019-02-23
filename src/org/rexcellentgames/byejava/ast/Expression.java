@@ -120,6 +120,11 @@ public class Expression extends Ast {
 				case PLUS: builder.append(" + "); break;
 				case SLASH: builder.append(" / "); break;
 				case STAR: builder.append(" * "); break;
+				case PERCENT_EQUAL: builder.append(" % "); break;
+				case MINUS_EQUAL: builder.append(" -= "); break;
+				case PLUS_EQUAL: builder.append(" += "); break;
+				case SLASH_EQUAL: builder.append(" /= "); break;
+				case STAR_EQUAL: builder.append(" *= "); break;
 				case PERCENT: builder.append(" % "); break;
 				case EQUAL_EQUAL: builder.append(" == "); break;
 				case BANG_EQUAL: builder.append(" != "); break;

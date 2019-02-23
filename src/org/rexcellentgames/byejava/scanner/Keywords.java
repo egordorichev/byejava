@@ -16,7 +16,7 @@ public class Keywords {
 		}
 
 		types.put("@Override", TokenType.OVERRIDE);
-		String[] res = { "int", "char", "boolean", "double" };
+		String[] res = { "int", "char", "boolean", "double", "float", "short", "byte" };
 
 		for (String string : res) {
 			reserved.put(string, 0);

@@ -8,6 +8,7 @@ public class Scanner {
 	private int line;
 	private int start;
 	private boolean ended;
+	public boolean hadError;
 
 	public Scanner(String source) {
 		setSource(source);
@@ -19,14 +20,28 @@ public class Scanner {
 		this.start = 0;
 		this.ended = false;
 		this.line = 1;
+		this.hadError = false;
 	}
 
 	protected Token makeToken(TokenType type) {
 		return new Token(type, this.start, this.position - this.start, this.line);
 	}
 
-	protected Token error(String error) {
-		return new ErrorToken(TokenType.ERROR, this.position, this.position, this.line, String.format("[line %d] %s", this.line, error));
+	public class Error extends RuntimeException {
+		public String message;
+
+		public Error(String message) {
+			this.message = message;
+		}
+
+		@Override
+		public String getMessage() {
+			return this.message;
+		}
+	}
+
+	protected void error(String error) {
+		throw new Error(String.format("[line %d] %s", this.line, error));
 	}
 
 	protected char advance() {
@@ -203,7 +218,7 @@ public class Scanner {
 					if (this.match('.')) {
 						return this.makeToken(TokenType.DOT_DOT_DOT);
 					} else {
-						return this.error("'.' expected");
+						this.error("'.' expected");
 					}
 				}
 
@@ -215,7 +230,7 @@ public class Scanner {
 					c = this.advance();
 
 					if (c == '\0') {
-						return this.error("Unterminated string");
+						this.error("Unterminated string");
 					}
 
 					if (c == '\"') {
@@ -238,14 +253,16 @@ public class Scanner {
 				c = this.advance();
 
 				if (c != '\'') {
-					return this.error("' expected");
+					this.error("' expected");
 				}
 
-				return makeToken(TokenType.CHAR);
+				return this.makeToken(TokenType.CHAR);
 			}
 
-			default: return error(String.format("Unexpected char '%c'", c));
+			default: this.error(String.format("Unexpected char '%c'", c));
 		}
+
+		return null;
 	}
 
 	public ArrayList<Token> scan() {
@@ -256,7 +273,12 @@ public class Scanner {
 		}
 
 		while (!this.ended) {
-			tokens.add(this.scanToken());
+			try {
+				tokens.add(this.scanToken());
+			} catch (Error e) {
+				this.hadError = true;
+				e.printStackTrace();
+			}
 		}
 
 		tokens.add(this.makeToken(TokenType.EOF));

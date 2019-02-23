@@ -1,11 +1,9 @@
 package org.rexcellentgames.byejava.ast;
 
-import jdk.nashorn.internal.ir.Block;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Statement extends Ast {
+public class Statement extends Expression {
 	public static class Expr extends Statement {
 		public Expression expression;
 
@@ -55,8 +53,9 @@ public class Statement extends Ast {
 		public ArrayList<Statement> inner;
 		public Modifier modifier;
 		public ArrayList<Generetic> generetics;
+		public Expression.Call call;
 
-		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init, ArrayList<Generetic> generetics) {
+		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init, ArrayList<Generetic> generetics, Expression.Call call) {
 			this.name = name;
 			this.base = base;
 			this.implementations = implementations;
@@ -66,80 +65,84 @@ public class Statement extends Ast {
 			this.methods = methods;
 			this.init = init;
 			this.generetics = generetics;
+			this.call = call;
 		}
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
-			indent(builder, tabs);
-			builder.append(this.modifier.access.toString().toLowerCase()).append(' ');
+			if (this.call == null) {
+				indent(builder, tabs);
+				builder.append(this.modifier.access.toString().toLowerCase()).append(' ');
 
-			if (this.modifier.isAbstract) {
-				builder.append("abstract ");
-			}
-
-			if (this.modifier.isFinal) {
-				builder.append("const ");
-			} else if (this.modifier.isStatic) {
-				builder.append("static ");
-			}
-
-			builder.append("class ").append(this.name);
-
-			if (this.generetics != null) {
-				builder.append('<');
-
-				for (int i = 0; i < this.generetics.size(); i++) {
-					builder.append(this.generetics.get(i).name);
-
-					if (i < this.generetics.size() - 1) {
-						builder.append(", ");
-					}
+				if (this.modifier.isAbstract) {
+					builder.append("abstract ");
 				}
 
-				builder.append("> ");
-			}
-
-			if (this.base != null || this.implementations != null) {
-				builder.append(" : ");
-
-				if (this.base != null) {
-					builder.append(this.base);
-
-					if (this.implementations != null) {
-						builder.append(", ");
-					}
+				if (this.modifier.isFinal) {
+					builder.append("const ");
+				} else if (this.modifier.isStatic) {
+					builder.append("static ");
 				}
 
-				if (this.implementations != null) {
-					for (int i = 0; i < this.implementations.size(); i++) {
-						builder.append(this.implementations.get(i));
+				builder.append("class ").append(this.name);
 
-						if (i < this.implementations.size() - 1) {
+				if (this.generetics != null) {
+					builder.append('<');
+
+					for (int i = 0; i < this.generetics.size(); i++) {
+						builder.append(this.generetics.get(i).name);
+
+						if (i < this.generetics.size() - 1) {
 							builder.append(", ");
 						}
 					}
+
+					builder.append("> ");
 				}
-			}
 
-			if (this.generetics != null) {
-				boolean had = false;
+				if (this.base != null || this.implementations != null) {
+					builder.append(" : ");
 
-				for (int i = 0; i < this.generetics.size(); i++) {
-					Generetic generetic = this.generetics.get(i);
+					if (this.base != null) {
+						builder.append(this.base);
 
-					if (generetic.extend == null) {
-						continue;
+						if (this.implementations != null) {
+							builder.append(", ");
+						}
 					}
 
-					if (had) {
-						builder.append(' ');
+					if (this.implementations != null) {
+						for (int i = 0; i < this.implementations.size(); i++) {
+							builder.append(this.implementations.get(i));
+
+							if (i < this.implementations.size() - 1) {
+								builder.append(", ");
+							}
+						}
 					}
-
-					had = true;
-					builder.append("where ").append(generetic.name).append(" : ").append(generetic.extend);
 				}
-			}
 
+				if (this.generetics != null) {
+					boolean had = false;
+
+					for (int i = 0; i < this.generetics.size(); i++) {
+						Generetic generetic = this.generetics.get(i);
+
+						if (generetic.extend == null) {
+							continue;
+						}
+
+						if (had) {
+							builder.append(' ');
+						}
+
+						had = true;
+						builder.append("where ").append(generetic.name).append(" : ").append(generetic.extend);
+					}
+				}
+			} else {
+				this.call.emit(builder, tabs);
+			}
 
 			builder.append(" {\n");
 			tabs++;
@@ -234,7 +237,7 @@ public class Statement extends Ast {
 			tabs--;
 
 			indent(builder, tabs);
-			builder.append("}\n");
+			builder.append(this.call == null ? "}\n" : "}");
 
 			return tabs;
 		}
@@ -560,6 +563,8 @@ public class Statement extends Ast {
 				this.elseBranch.emit(builder, this.elseBranch instanceof Expr ? 0 : tabs);
 			}
 
+			builder.append('\n');
+
 			return tabs;
 		}
 	}
@@ -814,6 +819,65 @@ public class Statement extends Ast {
 			tabs--;
 			indent(builder, tabs);
 			builder.append("}\n");
+
+			return tabs;
+		}
+	}
+
+	public static class Try extends Statement {
+		public Statement tryBranch;
+		public ArrayList<Statement.Var> tryVars;
+		public ArrayList<Statement> tryBranches;
+		public Statement finallyBranch;
+
+		public Try(Statement tryBranch, ArrayList<Statement.Var> tryVars, ArrayList<Statement> tryBranches, Statement finallyBranch) {
+			this.tryBranch = tryBranch;
+			this.tryVars = tryVars;
+			this.tryBranches = tryBranches;
+			this.finallyBranch = finallyBranch;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("try ");
+			this.tryBranch.emit(builder, tabs);
+
+			if (this.tryBranches != null) {
+				for (int i = 0; i < this.tryBranches.size(); i++) {
+					builder.deleteCharAt(builder.length() - 1);
+					builder.append(" catch (");
+					this.tryVars.get(i).emit(builder, 0);
+					builder.deleteCharAt(builder.length() - 1);
+					builder.deleteCharAt(builder.length() - 1);
+					builder.append(") ");
+					this.tryBranches.get(i).emit(builder,tabs);
+				}
+			}
+
+			if (this.finallyBranch != null) {
+				builder.deleteCharAt(builder.length() - 1);
+				builder.append(" finally ");
+				this.finallyBranch.emit(builder, tabs);
+			}
+
+			return tabs;
+		}
+	}
+
+	public static class Throw extends Statement {
+		public Expression var;
+
+		public Throw(Expression var) {
+			this.var = var;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			indent(builder, tabs);
+			builder.append("throw ");
+			this.var.emit(builder, 0);
+			builder.append(";\n");
 
 			return tabs;
 		}

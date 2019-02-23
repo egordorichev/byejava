@@ -46,6 +46,7 @@ public class Statement extends Expression {
 	public static class Class extends Statement {
 		public String name;
 		public String base;
+		public ArrayList<Generetic> baseGeneretic;
 		public ArrayList<String> implementations;
 		public ArrayList<Field> fields;
 		public ArrayList<Method> methods;
@@ -55,9 +56,10 @@ public class Statement extends Expression {
 		public ArrayList<Generetic> generetics;
 		public Expression.Call call;
 
-		public Class(String name, String base, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init, ArrayList<Generetic> generetics, Expression.Call call) {
+		public Class(String name, String base, ArrayList<Generetic> baseGeneretic, ArrayList<String> implementations, ArrayList<Field> fields, Modifier modifier, ArrayList<Method> methods, ArrayList<Statement> inner, ArrayList<Block> init, ArrayList<Generetic> generetics, Expression.Call call) {
 			this.name = name;
 			this.base = base;
+			this.baseGeneretic = baseGeneretic;
 			this.implementations = implementations;
 			this.fields = fields;
 			this.modifier = modifier;
@@ -105,6 +107,20 @@ public class Statement extends Expression {
 
 					if (this.base != null) {
 						builder.append(this.base);
+
+						if (this.baseGeneretic != null) {
+							builder.append('<');
+
+							for (int i = 0; i < this.baseGeneretic.size(); i++) {
+								builder.append(this.baseGeneretic.get(i).name);
+
+								if (i < this.baseGeneretic.size() - 1) {
+									builder.append(", ");
+								}
+							}
+
+							builder.append("> ");
+						}
 
 						if (this.implementations != null) {
 							builder.append(", ");

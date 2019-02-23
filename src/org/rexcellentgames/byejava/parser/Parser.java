@@ -952,6 +952,7 @@ public class Parser {
 		ArrayList<Statement> inner = null;
 		ArrayList<Statement.Block> init = null;
 		ArrayList<Generetic> generetics = null;
+		ArrayList<Generetic> baseGeneric = null;
 
 		if (call == null) {
 			if (this.match(TokenType.LESS)) {
@@ -977,6 +978,7 @@ public class Parser {
 
 			if (this.match(TokenType.EXTENDS)) {
 				base = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
+				baseGeneric = this.parseVarGenerics(false);
 			}
 
 			if (this.match(TokenType.IMPLEMENTS)) {
@@ -1047,7 +1049,7 @@ public class Parser {
 			}
 		}
 
-		return new Statement.Class(name == null ? null : name.getLexeme(this.code), base, implementations, fields, modifier, methods, inner, init, generetics, call);
+		return new Statement.Class(name == null ? null : name.getLexeme(this.code), base, baseGeneric, implementations, fields, modifier, methods, inner, init, generetics, call);
 	}
 
 	private Statement parseDeclaration(Modifier modifier) {

@@ -1,15 +1,13 @@
+using java.awt;
+
 namespace test {
-	public class Test {
-		protected void _Init() {
-			{
-				Tween.to(new Tween.Task(0, 2f) {
-					public override void onEnd() {
-						Camera.follow(Player.instance, false);
-					}
-				});
-			}
+	public class BKState : State<BurningKnight>  {
+		public override void update(float dt) {
+			if self.target != null {
+				self.lastSeen = new Point(self.target.x, self.target.y);
+			} 
+
+			base.update(dt);
 		}
-
-
 	}
 }

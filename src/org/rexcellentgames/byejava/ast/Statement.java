@@ -1,5 +1,6 @@
 package org.rexcellentgames.byejava.ast;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -265,13 +266,15 @@ public class Statement extends Expression {
 		public String type;
 		public Modifier modifier;
 		public ArrayList<Generetic> generetics;
+		public boolean array;
 
-		public Field(Expression init, String type, String name, Modifier modifier, ArrayList<Generetic> generetics) {
+		public Field(Expression init, String type, String name, Modifier modifier, ArrayList<Generetic> generetics,boolean array) {
 			this.init = init;
 			this.type = type;
 			this.name = name;
 			this.modifier = modifier;
 			this.generetics = generetics;
+			this.array = array;
 		}
 
 		@Override
@@ -310,6 +313,11 @@ public class Statement extends Expression {
 				}
 
 				builder.append(' ');
+			}
+
+			if (this.array) {
+				builder.deleteCharAt(builder.length() - 1);
+				builder.append("[] ");
 			}
 
 			builder.append(this.name);
@@ -390,7 +398,7 @@ public class Statement extends Expression {
 		public boolean override;
 
 		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments, ArrayList<Generetic> generetics) {
-			super(init, type, name, modifier, generetics);
+			super(init, type, name, modifier, generetics, false);
 
 			this.block = block;
 			this.arguments = arguments;
@@ -840,13 +848,18 @@ public class Statement extends Expression {
 		}
 	}
 
+	public static class TryException {
+		public ArrayList<String> types;
+		public String name;
+	}
+
 	public static class Try extends Statement {
 		public Statement tryBranch;
-		public ArrayList<Statement.Var> tryVars;
+		public ArrayList<TryException> tryVars;
 		public ArrayList<Statement> tryBranches;
 		public Statement finallyBranch;
 
-		public Try(Statement tryBranch, ArrayList<Statement.Var> tryVars, ArrayList<Statement> tryBranches, Statement finallyBranch) {
+		public Try(Statement tryBranch, ArrayList<TryException> tryVars, ArrayList<Statement> tryBranches, Statement finallyBranch) {
 			this.tryBranch = tryBranch;
 			this.tryVars = tryVars;
 			this.tryBranches = tryBranches;
@@ -863,7 +876,19 @@ public class Statement extends Expression {
 				for (int i = 0; i < this.tryBranches.size(); i++) {
 					builder.deleteCharAt(builder.length() - 1);
 					builder.append(" catch (");
-					this.tryVars.get(i).emit(builder, 0);
+					TryException var = this.tryVars.get(i);
+
+					for (int j = 0; j < var.types.size(); j++) {
+						builder.append(var.types.get(j));
+
+						if (j < var.types.size() - 1) {
+							builder.append(" | ");
+						}
+					}
+
+					builder.append(' ');
+					builder.append(var.name);
+
 					builder.deleteCharAt(builder.length() - 1);
 					builder.deleteCharAt(builder.length() - 1);
 					builder.append(") ");

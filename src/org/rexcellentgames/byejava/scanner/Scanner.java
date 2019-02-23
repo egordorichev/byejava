@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Scanner {
 	private String source;
 	private int position;
-	private int line;
+	public int line;
 	private int start;
 	private boolean ended;
 	public boolean hadError;

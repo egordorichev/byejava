@@ -30,27 +30,28 @@ public class ByeJava {
 
 		// todo: support directories
 		long ms = System.currentTimeMillis();
+		int lines = compileFile(args[0], args[1]);
 
-		if (!compileFile(args[0], args[1])) {
+		if (lines == -1) {
 			System.out.println("Failed to compile " + args[1]);
 		} else {
-			System.out.println(args[1] + " compiled in " + (System.currentTimeMillis() - ms) + " ms");
+			System.out.println(String.format("%s compiled in %d ms (%d lines)", args[1], (System.currentTimeMillis() - ms), lines));
 		}
 	}
 
-	public static boolean compileFile(String in, String to) {
+	public static int compileFile(String in, String to) {
 		String code = getSource(in);
 		Scanner scanner = new Scanner(code);
 		Parser parser = new Parser(scanner.scan(), code);
 
 		if (scanner.hadError) {
-			return false;
+			return -1;
 		}
 
 		Emitter emitter = new Emitter(parser.parse());
 
 		if (parser.hadError) {
-			return false;
+			return -1;
 		}
 
 		try (PrintWriter out = new PrintWriter(to)) {
@@ -59,6 +60,6 @@ public class ByeJava {
 			e.printStackTrace();
 		}
 
-		return true;
+		return scanner.line;
 	}
 }

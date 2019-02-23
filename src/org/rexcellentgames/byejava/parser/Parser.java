@@ -181,7 +181,16 @@ public class Parser {
 
 		if (this.match(TokenType.NEW)) {
 			this.consume(TokenType.IDENTIFIER, "Class name expected");
-			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
+			Expression expression = new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
+
+			if (this.match(TokenType.LEFT_BRACKET)) {
+				Expression index = this.parseExpression();
+				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+
+				expression = new Expression.Index(expression, index);
+			}
+
+			return expression;
 		}
 
 		if (this.match(TokenType.IDENTIFIER)) {
@@ -691,7 +700,7 @@ public class Parser {
 
 	private Statement parseTry() {
 		Statement tryBranch = this.parseStatement();
-		ArrayList<Statement.Var> tryVars = null;
+		ArrayList<Statement.TryException> tryVars = null;
 		ArrayList<Statement> tryBranches = null;
 		Statement finallyBranch = null;
 
@@ -702,7 +711,22 @@ public class Parser {
 			}
 
 			this.consume(TokenType.LEFT_PAREN, "'(' expected");
-			tryVars.add((Statement.Var) this.parseVariable(false));
+			Statement.TryException var = new Statement.TryException();
+			tryVars.add(var);
+
+			while (true) {
+				if (var.types == null) {
+					var.types = new ArrayList<>();
+				}
+
+				var.types.add(this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code));
+
+				if (!this.match(TokenType.BAR)) {
+					break;
+				}
+			}
+
+			var.name = this.consume(TokenType.IDENTIFIER, "Exception name expected").getLexeme(this.code);
 			this.consume(TokenType.RIGHT_PAREN, "')' expected");
 			tryBranches.add(this.parseStatement());
 		}
@@ -868,6 +892,13 @@ public class Parser {
 		}
 
 		String type = this.peekPrevious().getLexeme(this.code);
+		boolean arr = false;
+
+		if (this.match(TokenType.LEFT_BRACKET)) {
+			arr = true;
+			this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+		}
+
 		String name = null;
 
 		if (this.peek().type == TokenType.LESS) {
@@ -877,6 +908,11 @@ public class Parser {
 
 		if (this.peek().type == TokenType.IDENTIFIER) {
 			name = this.advance().getLexeme(this.code);
+
+			if (this.match(TokenType.LEFT_BRACKET)) {
+				arr = true;
+				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+			}
 		} else {
 			name = type;
 			type = null;
@@ -917,6 +953,11 @@ public class Parser {
 				boolean varg = this.match(TokenType.DOT_DOT_DOT);
 				String argumentName = this.consume(TokenType.IDENTIFIER, "Argument name expected").getLexeme(this.code);
 
+				if (this.match(TokenType.LEFT_BRACKET)) {
+					array = true;
+					this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+				}
+
 				arguments.add(new Argument(argumentName, argumentType, generetics, varg, array));
 
 				if (varg || !this.match(TokenType.COMMA)) {
@@ -940,7 +981,7 @@ public class Parser {
 		}
 
 		this.consume(TokenType.SEMICOLON, "';' expected");
-		return new Statement.Field(init, type, name, modifier, gen);
+		return new Statement.Field(init, type, name, modifier, gen, arr);
 	}
 
 	private Statement parseClassStatement(Modifier modifier, Expression.Call call) {

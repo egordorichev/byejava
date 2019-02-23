@@ -1,6 +1,7 @@
 package org.rexcellentgames.byejava.parser;
 
 import org.rexcellentgames.byejava.ast.*;
+import org.rexcellentgames.byejava.scanner.Keywords;
 import org.rexcellentgames.byejava.scanner.Token;
 import org.rexcellentgames.byejava.scanner.TokenType;
 
@@ -67,7 +68,7 @@ public class Parser {
 
 	private Token consume(TokenType type, String error) {
 		if (!this.match(type)) {
-			this.error(error);
+			this.error(error + " got " + this.peek().type.toString().toLowerCase());
 		}
 
 		return this.peekPrevious();
@@ -126,7 +127,7 @@ public class Parser {
 
 			while (!this.match(TokenType.GREATER)) {
 				Generetic generetic = new Generetic();
-				generetic.name = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+				generetic.name = this.consumeType();
 				generetics.add(generetic);
 
 				if (this.peek().type != TokenType.GREATER) {
@@ -169,10 +170,34 @@ public class Parser {
 		}
 
 		if (this.match(TokenType.IDENTIFIER)) {
-			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), false);
+			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), null, false);
 		}
 
 		if (this.match(TokenType.LEFT_PAREN)) {
+			if (this.peek().type == TokenType.IDENTIFIER) {
+				String type = this.peek().getLexeme(this.code);
+
+				if (Character.isUpperCase(type.charAt(0)) || Keywords.reserved.containsKey(type)) {
+					this.advance();
+
+					if (!this.match(TokenType.RIGHT_PAREN)) {
+						StringBuilder builder = new StringBuilder();
+						builder.append(type);
+
+						while (!this.match(TokenType.RIGHT_PAREN)) {
+							this.consume(TokenType.DOT, "'.' expected");
+							builder.append('.');
+							builder.append(this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code));
+						}
+
+						type = builder.toString();
+					}
+
+					Expression expression = this.parseExpression();
+					return new Expression.Cast(type, expression);
+				}
+			}
+
 			Expression expression = this.parseExpression();
 			this.consume(TokenType.RIGHT_PAREN, "')' expected");
 			return new Expression.Grouping(expression);
@@ -184,6 +209,27 @@ public class Parser {
 
 		if (this.match(TokenType.SUPER)) {
 			return new Expression.Super();
+		}
+
+		if (this.match(TokenType.LEFT_BRACE)) {
+			ArrayList<Expression> values = null;
+
+			while (!this.match(TokenType.RIGHT_BRACE)) {
+				if (values == null) {
+					values = new ArrayList<>();
+				}
+
+				values.add(this.parseExpression());
+
+				if (this.peek().type == TokenType.RIGHT_BRACE) {
+					this.advance();
+					break;
+				}
+
+				this.consume(TokenType.COMMA, "',' expected");
+			}
+
+			return new Expression.Array(values);
 		}
 
 		this.error("Unexpected token " + this.peek().type);
@@ -255,7 +301,7 @@ public class Parser {
 	private Expression parseMultiplication() {
 		Expression expression = this.parseUnary();
 
-		while (this.match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
+		while (this.match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT, TokenType.INSTANCEOF)) {
 			TokenType operator = this.peekPrevious().type;
 			expression = new Expression.Binary(operator, expression, this.parseUnary());
 		}
@@ -363,7 +409,9 @@ public class Parser {
 	}
 
 	private Statement parseIf() {
+		this.consume(TokenType.LEFT_PAREN, "'(' expected");
 		Expression ifCondition = this.parseExpression();
+		this.consume(TokenType.RIGHT_PAREN, "')' expected");
 		Statement ifBranch = this.parseStatement();
 		ArrayList<Expression> ifElseConditions = null;
 		ArrayList<Statement> ifElseBranches = null;
@@ -376,7 +424,9 @@ public class Parser {
 					ifElseBranches = new ArrayList<>();
 				}
 
+				this.consume(TokenType.LEFT_PAREN, "'(' expected");
 				ifElseConditions.add(this.parseExpression());
+				this.consume(TokenType.RIGHT_PAREN, "')' expected");
 				ifElseBranches.add(this.parseStatement());
 			} else {
 				elseBranch = this.parseStatement();
@@ -395,14 +445,15 @@ public class Parser {
 		this.consume(TokenType.LEFT_PAREN, "'(' expected");
 
 		if (!this.match(TokenType.SEMICOLON)) {
-			if (this.peek().type == TokenType.IDENTIFIER && this.peekNext().type == TokenType.IDENTIFIER) {
+			if (this.checkForVariable()) {
 				init = this.parseVariable(false);
 
 				if (this.match(TokenType.COLON)) {
 					condition = this.parseExpression();
 					this.consume(TokenType.RIGHT_PAREN, "')' expected");
-
 					return new Statement.Foreach(init, condition, this.parseStatement());
+				} else {
+					this.consume(TokenType.SEMICOLON, "';' expected");
 				}
 			} else {
 				init = new Statement.Expr(this.parseExpression());
@@ -425,9 +476,20 @@ public class Parser {
 		return new Statement.For(init, condition, increment, body);
 	}
 
+	private String consumeType() {
+		Token start = this.consume(TokenType.IDENTIFIER, "Variable type expected");
+
+		while (this.match(TokenType.DOT)) {
+			this.consume(TokenType.IDENTIFIER, "Type name expected");
+		}
+
+		return this.code.substring(start.start, this.peekPrevious().start + this.peekPrevious().size);
+	}
+
 	private Statement parseVariable(boolean end) {
-		String type = this.consume(TokenType.IDENTIFIER, "Variable type expected").getLexeme(this.code);
+		String type = this.consumeType();
 		ArrayList<Generetic> generetics = null;
+		boolean array = false;
 
 		if (this.match(TokenType.LESS)) {
 			generetics = new ArrayList<>();
@@ -435,7 +497,7 @@ public class Parser {
 			while (true) {
 				Generetic generetic = new Generetic();
 				generetics.add(generetic);
-				generetic.name = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+				generetic.name = this.consumeType();
 
 				if (this.match(TokenType.GREATER)) {
 					break;
@@ -445,16 +507,27 @@ public class Parser {
 			}
 		}
 
+		if (this.match(TokenType.LEFT_BRACKET)) {
+			array = true;
+			this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+		}
+
 		String name = this.consume(TokenType.IDENTIFIER, "Variable name expected").getLexeme(this.code);
 		Expression init = null;
 
-		if (end && !this.match(TokenType.SEMICOLON)) {
-			this.consume(TokenType.EQUAL, "'=' expected");
-			init = this.parseExpression();
-			this.consume(TokenType.SEMICOLON, "';' expected");
+		if (end) {
+			if (!this.match(TokenType.SEMICOLON)) {
+				this.consume(TokenType.EQUAL, "'=' expected");
+				init = this.parseExpression();
+				this.consume(TokenType.SEMICOLON, "';' expected");
+			}
+		} else {
+			if (this.match(TokenType.EQUAL)) {
+				init = this.parseExpression();
+			}
 		}
 
-		return new Statement.Var(new Argument(name, type, generetics, false), init);
+		return new Statement.Var(new Argument(name, type, generetics, false, array), init);
 	}
 
 	private Statement parseDo() {
@@ -512,7 +585,10 @@ public class Parser {
 						branch.block = (Statement.Block) this.parseBlock();
 					} else {
 						ArrayList<Statement> list = new ArrayList<>();
-						list.add(this.parseStatement());
+
+						while (this.peek().type != TokenType.CASE && this.peek().type != TokenType.DEFAULT && this.peek().type != TokenType.RIGHT_BRACE) {
+							list.add(this.parseStatement());
+						}
 
 						branch.block = new Statement.Block(list);
 					}
@@ -525,36 +601,72 @@ public class Parser {
 		return new Statement.Switch(branches, what);
 	}
 
-	private Statement parseStatement() {
-		if (this.match(TokenType.LEFT_BRACE)) {
-			return this.parseBlock();
-		}
-
+	private boolean checkForVariable() {
 		if (this.peek().type == TokenType.IDENTIFIER) {
+			if (!Character.isUpperCase(this.code.charAt(this.peek().start)) && !Keywords.reserved.containsKey(this.peek().getLexeme(this.code))) {
+				return false;
+			}
+
 			int i = this.current;
 			int balance = 0;
+
+			if (this.peekNext().type == TokenType.DOT) {
+				while (true) {
+					i++;
+
+					if (i >= this.tokens.size()) {
+						return false;
+					}
+
+					if (this.tokens.get(i).type == TokenType.DOT) {
+						Token token = this.tokens.get(i + 1);
+
+						if (token.type != TokenType.IDENTIFIER) {
+							return false;
+						}
+
+						if (!Character.isUpperCase(this.code.charAt(token.start))) {
+							return false;
+						}
+					}
+
+					break;
+				}
+			}
 
 			while (true) {
 				i++;
 
 				if (i >= this.tokens.size()) {
-					break;
+					return false;
 				}
 
 				TokenType type = this.tokens.get(i).type;
 
 				if (type == TokenType.IDENTIFIER) {
 					if (balance == 0) {
-						return this.parseVariable(true);
+						return true;
 					}
 				} else if (type == TokenType.LESS) {
 					balance++;
 				} else if (type == TokenType.GREATER) {
 					balance--;
-				} else if (type != TokenType.COMMA) {
-					break;
+				} else if (type != TokenType.DOT && type != TokenType.COMMA && type != TokenType.LEFT_BRACKET && type != TokenType.RIGHT_BRACKET) {
+					return false;
 				}
 			}
+		}
+
+		return false;
+	}
+
+	private Statement parseStatement() {
+		if (this.match(TokenType.LEFT_BRACE)) {
+			return this.parseBlock();
+		}
+
+		if (this.checkForVariable()) {
+			return this.parseVariable(true);
 		}
 
 		if (this.match(TokenType.SWITCH)) {
@@ -669,11 +781,6 @@ public class Parser {
 				case ABSTRACT: modifier.isAbstract = true; break;
 
 				default: {
-					if (type == TokenType.LESS) {
-						gen = this.parseVarGenerics(true);
-						this.advance();
-					}
-
 					found = true;
 					break;
 				}
@@ -699,6 +806,11 @@ public class Parser {
 		String type = this.peekPrevious().getLexeme(this.code);
 		String name = null;
 
+		if (this.peek().type == TokenType.LESS) {
+			this.advance();
+			gen = this.parseVarGenerics(true);
+		}
+
 		if (this.peek().type == TokenType.IDENTIFIER) {
 			name = this.advance().getLexeme(this.code);
 		} else {
@@ -716,13 +828,14 @@ public class Parser {
 			while (!this.match(TokenType.RIGHT_PAREN)) {
 				String argumentType = this.consume(TokenType.IDENTIFIER, "Argument type expected").getLexeme(this.code);
 				ArrayList<Generetic> generetics = null;
+				boolean array = false;
 
 				if (this.match(TokenType.LESS)) {
 					generetics = new ArrayList<>();
 
 					while (true) {
 						Generetic generetic = new Generetic();
-						generetic.name = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+						generetic.name = this.consumeType();
 
 						if (this.match(TokenType.GREATER)) {
 							break;
@@ -732,10 +845,15 @@ public class Parser {
 					}
 				}
 
+				if (this.match(TokenType.LEFT_BRACKET)) {
+					array = true;
+					this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+				}
+
 				boolean varg = this.match(TokenType.DOT_DOT_DOT);
 				String argumentName = this.consume(TokenType.IDENTIFIER, "Argument name expected").getLexeme(this.code);
 
-				arguments.add(new Argument(argumentName, argumentType, generetics, varg));
+				arguments.add(new Argument(argumentName, argumentType, generetics, varg, array));
 
 				if (varg || !this.match(TokenType.COMMA)) {
 					this.consume(TokenType.RIGHT_PAREN, "')' expected");
@@ -753,7 +871,7 @@ public class Parser {
 		}
 
 		this.consume(TokenType.SEMICOLON, "';' expected");
-		return new Statement.Field(init, type, name, modifier);
+		return new Statement.Field(init, type, name, modifier, gen);
 	}
 
 	private Statement parseClassStatement(Modifier modifier) {
@@ -773,7 +891,7 @@ public class Parser {
 				Generetic generetic = new Generetic();
 				generetics.add(generetic);
 
-				generetic.name = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+				generetic.name = this.consumeType();
 
 				if (this.match(TokenType.EXTENDS)) {
 					generetic.extend = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);

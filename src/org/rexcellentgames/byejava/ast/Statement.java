@@ -1,5 +1,7 @@
 package org.rexcellentgames.byejava.ast;
 
+import jdk.nashorn.internal.ir.Block;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -185,9 +187,9 @@ public class Statement extends Ast {
 					for (int i = 0; i < this.fields.size(); i++) {
 						tabs = this.fields.get(i).emit(builder, tabs);
 
-						if (this.methods != null || i < this.fields.size() - 1) {
+						/*if (this.methods != null || i < this.fields.size() - 1) {
 							builder.append('\n');
-						}
+						}*/
 					}
 				}
 
@@ -243,12 +245,14 @@ public class Statement extends Ast {
 		public Expression init;
 		public String type;
 		public Modifier modifier;
+		public ArrayList<Generetic> generetics;
 
-		public Field(Expression init, String type, String name, Modifier modifier) {
+		public Field(Expression init, String type, String name, Modifier modifier, ArrayList<Generetic> generetics) {
 			this.init = init;
 			this.type = type;
 			this.name = name;
 			this.modifier = modifier;
+			this.generetics = generetics;
 		}
 
 		@Override
@@ -270,7 +274,23 @@ public class Statement extends Ast {
 			this.insert(builder, tabs);
 
 			if (this.type != null) {
-				builder.append(this.type).append(' ');
+				builder.append(this.type);
+
+				if (this.generetics != null && !(this instanceof Method)) {
+					builder.append('<');
+
+					for (int i = 0; i < this.generetics.size(); i++) {
+						builder.append(this.generetics.get(i).name);
+
+						if (i < this.generetics.size() - 1) {
+							builder.append(", ");
+						}
+					}
+
+					builder.append('>');
+				}
+
+				builder.append(' ');
 			}
 
 			builder.append(this.name);
@@ -301,6 +321,10 @@ public class Statement extends Ast {
 			this.statements = statements;
 		}
 
+		private static boolean valid(Statement expression) {
+			return expression instanceof Expr || expression instanceof Var;
+		}
+
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			builder.append("{\n");
@@ -319,7 +343,7 @@ public class Statement extends Ast {
 				for (int i = 0; i < this.statements.size(); i++) {
 					Statement statement = this.statements.get(i);
 
-					if (i > 0 && !(this.statements.get(i - 1) instanceof Expr && statement instanceof Expr)) {
+					if (i > 0 && !(valid(this.statements.get(i - 1)) && valid(statement))) {
 						builder.append('\n');
 					}
 
@@ -345,14 +369,12 @@ public class Statement extends Ast {
 		public Block block;
 		public ArrayList<Argument> arguments;
 		public boolean override;
-		public ArrayList<Generetic> generetics;
 
 		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments, ArrayList<Generetic> generetics) {
-			super(init, type, name, modifier);
+			super(init, type, name, modifier, generetics);
 
 			this.block = block;
 			this.arguments = arguments;
-			this.generetics = generetics;
 		}
 
 		@Override
@@ -616,6 +638,10 @@ public class Statement extends Ast {
 				}
 
 				builder.append('>');
+			}
+
+			if (this.self.array) {
+				builder.append("[]");
 			}
 
 			builder.append(' ').append(this.self.name);

@@ -114,6 +114,8 @@ public class Expression extends Ast {
 			tabs = this.left.emit(builder, tabs);
 
 			switch (this.operator) {
+				case AND: builder.append(" && "); break;
+				case OR: builder.append(" || "); break;
 				case MINUS: builder.append(" - "); break;
 				case PLUS: builder.append(" + "); break;
 				case SLASH: builder.append(" / "); break;
@@ -125,6 +127,7 @@ public class Expression extends Ast {
 				case GREATER_EQUAL: builder.append(" >= "); break;
 				case GREATER: builder.append(" > "); break;
 				case LESS: builder.append(" < "); break;
+				case INSTANCEOF: builder.append(" is "); break;
 			}
 
 			return this.right.emit(builder, tabs);
@@ -287,6 +290,53 @@ public class Expression extends Ast {
 			this.ifBranch.emit(builder, tabs);
 			builder.append(" : ");
 			this.elseBranch.emit(builder, tabs);
+
+			return tabs;
+		}
+	}
+
+	public static class Cast extends Expression {
+		public String type;
+		public Expression expression;
+
+		public Cast(String type, Expression expression) {
+			this.type = type;
+			this.expression = expression;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append('(').append(this.type).append(") ");
+			return this.expression.emit(builder, tabs);
+		}
+	}
+
+	public static class Array extends Expression {
+		public ArrayList<Expression> values;
+
+		public Array(ArrayList<Expression> values) {
+			this.values = values;
+		}
+
+		@Override
+		public int emit(StringBuilder builder, int tabs) {
+			builder.append('{');
+
+			if (this.values != null) {
+				builder.append(' ');
+
+				for (int i = 0; i < this.values.size(); i++) {
+					this.values.get(i).emit(builder, 0);
+
+					if (i < this.values.size() - 1) {
+						builder.append(", ");
+					} else {
+						builder.append(' ');
+					}
+				}
+			}
+
+			builder.append('}');
 
 			return tabs;
 		}

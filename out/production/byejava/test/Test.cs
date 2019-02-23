@@ -1,9 +1,14 @@
+using org.rexcellentgames.byejava.ast;
 using java.util;
 
 namespace test {
-	public class Test<T, C> where T : A where C : D {
-		public void test() {
-			ArrayListT, C list;
+	public class Test {
+		protected void _Init() {
+			{
+				HashMap<String, Expression.Literal> init = null;
+			}
 		}
+
+
 	}
 }

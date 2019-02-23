@@ -1,7 +1,9 @@
 package org.rexcellentgames.byejava;
 
+import org.rexcellentgames.byejava.ast.Statement;
 import org.rexcellentgames.byejava.emitter.Emitter;
 import org.rexcellentgames.byejava.parser.Parser;
+import org.rexcellentgames.byejava.renamer.Renamer;
 import org.rexcellentgames.byejava.scanner.Scanner;
 
 import java.io.FileNotFoundException;
@@ -10,6 +12,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class ByeJava {
 	private static String getSource(String file) {
@@ -48,11 +51,16 @@ public class ByeJava {
 			return -1;
 		}
 
-		Emitter emitter = new Emitter(parser.parse());
+		ArrayList<Statement> ast = parser.parse();
 
 		if (parser.hadError) {
 			return -1;
 		}
+
+		Renamer renamer = new Renamer();
+		renamer.rename(ast);
+
+		Emitter emitter = new Emitter(ast);
 
 		try (PrintWriter out = new PrintWriter(to)) {
 			out.println(emitter.emit());

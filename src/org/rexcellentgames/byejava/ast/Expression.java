@@ -54,6 +54,12 @@ public class Expression extends Ast {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.name = this.updateName(name);
+			this.checkTypes(this.generetics);
+		}
 	}
 
 	public static class Unary extends Expression {
@@ -73,6 +79,11 @@ public class Expression extends Ast {
 			}
 
 			return this.right.emit(builder, tabs);
+		}
+
+		@Override
+		public void rename() {
+			this.right.rename();
 		}
 	}
 
@@ -95,6 +106,11 @@ public class Expression extends Ast {
 			}
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.left.rename();
 		}
 	}
 
@@ -137,6 +153,12 @@ public class Expression extends Ast {
 
 			return this.right.emit(builder, tabs);
 		}
+
+		@Override
+		public void rename() {
+			this.right.rename();
+			this.left.rename();
+		}
 	}
 
 	public static class Get extends Expression {
@@ -175,6 +197,12 @@ public class Expression extends Ast {
 			tabs = this.to.emit(builder, tabs);
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.from.rename();
+			this.field = this.updateName(this.field);
+		}
 	}
 
 	public static class Assign extends Expression {
@@ -192,6 +220,12 @@ public class Expression extends Ast {
 			builder.append(" = ");
 
 			return this.value.emit(builder, tabs);
+		}
+
+		@Override
+		public void rename() {
+			this.to.rename();
+			this.value.rename();
 		}
 	}
 
@@ -222,6 +256,12 @@ public class Expression extends Ast {
 			builder.append(')');
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.callee.rename();
+			this.rename(this.arguments);
+		}
 	}
 
 	public static class Grouping extends Expression {
@@ -238,6 +278,11 @@ public class Expression extends Ast {
 			builder.append(')');
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.expression.rename();
 		}
 	}
 
@@ -258,6 +303,12 @@ public class Expression extends Ast {
 			builder.append(']');
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.from.rename();
+			this.index.rename();
 		}
 	}
 
@@ -298,6 +349,13 @@ public class Expression extends Ast {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.condition.rename();
+			this.ifBranch.rename();
+			this.elseBranch.rename();
+		}
 	}
 
 	public static class Cast extends Expression {
@@ -313,6 +371,12 @@ public class Expression extends Ast {
 		public int emit(StringBuilder builder, int tabs) {
 			builder.append('(').append(this.type).append(") ");
 			return this.expression.emit(builder, tabs);
+		}
+
+		@Override
+		public void rename() {
+			this.type = this.checkType(this.type);
+			this.expression.rename();
 		}
 	}
 
@@ -344,6 +408,11 @@ public class Expression extends Ast {
 			builder.append('}');
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.rename(this.values);
 		}
 	}
 }

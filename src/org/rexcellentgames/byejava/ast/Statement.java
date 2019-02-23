@@ -258,6 +258,57 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.name = this.checkType(this.name);
+
+			if (this.base != null) {
+				this.base = this.checkType(this.base);
+
+				if (this.baseGeneretic != null) {
+					this.checkTypes(this.baseGeneretic);
+				}
+			}
+
+			if (this.implementations != null) {
+				for (int i = 0; i < this.implementations.size(); i++) {
+					this.implementations.set(i, this.checkType(this.implementations.get(i)));
+				}
+			}
+
+			if (this.generetics != null) {
+				this.checkTypes(this.generetics);
+			}
+
+			if (this.methods != null) {
+				for (Method methods : this.methods) {
+					methods.rename();
+				}
+			}
+
+			if (this.fields != null) {
+				for (Field field : this.fields) {
+					field.rename();
+				}
+			}
+
+			if (this.inner != null) {
+				for (Statement inner : this.inner) {
+					inner.rename();
+				}
+			}
+
+			if (this.init != null) {
+				for (Block block : this.init) {
+					block.rename();
+				}
+			}
+
+			if (this.call != null) {
+				this.call.rename();
+			}
+		}
 	}
 
 	public static class Field extends Statement {

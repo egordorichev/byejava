@@ -251,7 +251,7 @@ public class Scanner {
 	public ArrayList<Token> scan() {
 		ArrayList<Token> tokens = new ArrayList<>();
 
-		if (ended) {
+		if (this.source.length() == 0 || ended) {
 			return tokens;
 		}
 

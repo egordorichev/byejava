@@ -1,6 +1,25 @@
 package org.rexcellentgames.byejava.scanner;
 
 public enum TokenType {
+	// Keywords
+	CLASS, NEW,
+	IMPLEMENTS, EXTENDS,
+	ENUM, NULL,
+	RETURN, SUPER, THIS,
+	TRUE, FALSE,
+	WHILE, DO, FOR,
+	BREAK, CONTINUE,
+	IF, ELSE,
+	SWITCH, DEFAULT,
+	CASE, INSTANCEOF,
+	PUBLIC, PROTECTED,
+	PRIVATE, STATIC,
+	FINAL,
+	PACKAGE, IMPORT,
+	TRY, THROWS,
+	THROW, CATCH,
+	FINALLY, ABSTRACT,
+	OVERRIDE,
 	// Values
 	IDENTIFIER, STRING, NUMBER, CHAR,
 	// Single-character tokens.
@@ -26,32 +45,6 @@ public enum TokenType {
 	AND, // &&
 	BAR, BAR_EQUAL,
 	OR, // ||
-	// Keywords
-	CLASS, NEW,
-	IMPLEMENTS, EXTENDS,
-	ENUM, NULL,
-	RETURN, SUPER, THIS,
-	TRUE, FALSE,
-	WHILE, DO, FOR,
-	BREAK, CONTINUE,
-	IF, ELSE,
-	SWITCH, DEFAULT,
-	CASE, INSTANCEOF,
-	PUBLIC, PROTECTED,
-	PRIVATE, STATIC,
-	FINAL,
-	PACKAGE, IMPORT,
-	TRY, THROWS,
-	THROW, CATCH,
-	FINALLY, ABSTRACT,
-	OVERRIDE,
 	// Special
-	EOF, ERROR;
-
-	public int id;
-
-	TokenType() {
-		// Can't store a static field in a enum :/
-		this.id = Token.lastId++;
-	}
+	EOF, ERROR
 }

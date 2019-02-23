@@ -8,14 +8,14 @@ public class Keywords {
 
 	static {
 		for (TokenType type : TokenType.values()) {
-			// Check if this is a keyword
-			if (type.id >= TokenType.CLASS.id && type.id <= TokenType.ABSTRACT.id) {
-				types.put(type.toString().toLowerCase(), type);
+			if (type == TokenType.OVERRIDE) {
+				break;
 			}
 
-			types.put("@Override", TokenType.OVERRIDE);
+			types.put(type.toString().toLowerCase(), type);
 		}
 
+		types.put("@Override", TokenType.OVERRIDE);
 		String[] res = { "int", "char", "boolean", "double" };
 
 		for (String string : res) {

@@ -186,10 +186,10 @@ public class Statement extends Ast {
 				if (this.fields != null) {
 					for (int i = 0; i < this.fields.size(); i++) {
 						tabs = this.fields.get(i).emit(builder, tabs);
+					}
 
-						/*if (this.methods != null || i < this.fields.size() - 1) {
-							builder.append('\n');
-						}*/
+					if (this.methods != null) {
+						builder.append('\n');
 					}
 				}
 

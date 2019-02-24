@@ -121,4 +121,11 @@ public class Ast {
 			statement.rename();
 		}
 	}
+
+	protected void rename(Argument argument) {
+		argument.name = this.updateName(argument.name);
+		argument.type = this.checkType(argument.type);
+
+		this.checkTypes(argument.generetics);
+	}
 }

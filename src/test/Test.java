@@ -277,6 +277,7 @@ public class Player extends Creature {
 			Graphics.endAlphaShape();
 		}
 	}
+
 	private boolean rolling;
 	private boolean hadEnemies;
 
@@ -326,7 +327,9 @@ public class Player extends Creature {
 
 	public float getWarrior() {
 		return this.type == Type.WARRIOR ? 1f : 0.1f;
-	}	@Override
+	}
+
+	@Override
 	public void setHpMax(int hpMax) {
 		super.setHpMax(hpMax);
 
@@ -349,7 +352,9 @@ public class Player extends Creature {
 
 	public void setKeys(int money) {
 		this.keys = Math.min(99, money);
-	}	public void resetHit() {
+	}
+
+	public void resetHit() {
 		gotHit = false;
 	}
 
@@ -383,7 +388,9 @@ public class Player extends Creature {
 
 	public void setType(Type type) {
 		this.type = type;
-	}	@Override
+	}
+
+	@Override
 	public void renderShadow() {
 		float z = this.z;
 		boolean flying = false;
@@ -417,7 +424,9 @@ public class Player extends Creature {
 		roll = animations.get("roll");
 		killed = animations.get("dead");
 		animation = this.idle;
-	}	@Override
+	}
+
+	@Override
 	public void destroy() {
 		super.destroy();
 		World.removeLight(light);
@@ -436,7 +445,9 @@ public class Player extends Creature {
 
 	public void setName(String name) {
 		this.name = name;
-	}	@Override
+	}
+
+	@Override
 	public void init() {
 		super.init();
 		invt = 0.5f;
@@ -559,7 +570,9 @@ public class Player extends Creature {
 		} else {
 			this.inventory.add(new ItemHolder(item));
 		}
-	}	private void doTp(boolean fromInit) {
+	}
+
+	private void doTp(boolean fromInit) {
 		if (this.teleport) {
 			this.tp(this.lastGround.x, this.lastGround.y);
 			return;
@@ -594,7 +607,9 @@ public class Player extends Creature {
 		GlobalSave.put("last_hat", name);
 		hatId = name;
 		this.hat = Graphics.getTexture("hat-" + name + "-idle-00");
-	}	@Override
+	}
+
+	@Override
 	public void tp(float x, float y) {
 		super.tp(x, y);
 		Camera.follow(this, true);
@@ -620,7 +635,9 @@ public class Player extends Creature {
 
 	public void setUi(UiInventory ui) {
 		this.ui = ui;
-	}	@Override
+	}
+
+	@Override
 	public boolean isUnhittable() {
 		return super.isUnhittable() || this.rolling;
 	}
@@ -1031,7 +1048,9 @@ public class Player extends Creature {
 
 	public boolean didGetHit() {
 		return gotHit;
-	}	@Override
+	}
+
+	@Override
 	protected void common() {
 		super.common();
 	}
@@ -1361,21 +1380,13 @@ public class Player extends Creature {
 	public int getLevel() {
 		return this.level;
 	}
+
 	public enum Type {
-		WARRIOR(0),
-		WIZARD(1),
-		RANGER(2),
-		NONE(3);
-
-		public int id;
-
-		Type(int id) {
-			this.id = id;
-		}
+		WARRIOR,
+		WIZARD,
+		RANGER,
+		NONE
 	}
-
-
-
 
 
 	@Override
@@ -1447,9 +1458,6 @@ public class Player extends Creature {
 			}
 		}
 	}
-
-
-
 
 
 	@Override
@@ -1561,7 +1569,6 @@ public class Player extends Creature {
 			this.shouldDie = true;
 		}
 	}
-
 
 
 	@Override

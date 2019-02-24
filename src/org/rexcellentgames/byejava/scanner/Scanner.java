@@ -104,7 +104,9 @@ public class Scanner {
 						this.advance();
 
 						while (!(this.peek() == '*' && this.peekNext() == '/') && this.peek() != '\0') {
-							this.advance();
+							if (this.advance() == '\n') {
+								this.line++;
+							}
 						}
 
 						this.advance();

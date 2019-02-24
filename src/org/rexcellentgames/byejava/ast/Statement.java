@@ -2,6 +2,8 @@ package org.rexcellentgames.byejava.ast;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 public class Statement extends Expression {
@@ -19,6 +21,11 @@ public class Statement extends Expression {
 			builder.append(";\n");
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.expression.rename();
 		}
 	}
 
@@ -204,6 +211,13 @@ public class Statement extends Expression {
 				}
 
 				if (this.fields != null) {
+					Collections.sort(this.fields, new Comparator<Field>() {
+						@Override
+						public int compare(Field s1, Field s2) {
+							return s1.name.compareToIgnoreCase(s2.name);
+						}
+					});
+
 					for (int i = 0; i < this.fields.size(); i++) {
 						tabs = this.fields.get(i).emit(builder, tabs);
 					}
@@ -216,6 +230,13 @@ public class Statement extends Expression {
 				boolean calledInit = false;
 
 				if (this.methods != null) {
+					Collections.sort(this.methods, new Comparator<Field>() {
+						@Override
+						public int compare(Field s1, Field s2) {
+							return s1.name.compareToIgnoreCase(s2.name);
+						}
+					});
+
 					for (int i = 0; i < this.methods.size(); i++) {
 						Method method = this.methods.get(i);
 
@@ -444,6 +465,11 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.renameStatements(this.statements);
+		}
 	}
 
 	public static class Method extends Field {
@@ -516,6 +542,18 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			super.rename();
+			this.block.rename();
+
+			if (this.arguments != null) {
+				for (Argument argument : this.arguments) {
+					this.rename(argument);
+				}
+			}
+		}
 	}
 
 	public static class Enum extends Statement {
@@ -565,6 +603,15 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.name = this.updateName(this.name);
+
+			for (int i = 0; i < this.values.size(); i++) {
+				this.values.set(i, this.updateName(this.values.get(i)));
+			}
+		}
 	}
 
 	public static class Return extends Statement {
@@ -586,6 +633,13 @@ public class Statement extends Expression {
 
 			builder.append(";\n");
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			if (this.value != null) {
+				this.value.rename();
+			}
 		}
 	}
 
@@ -610,11 +664,9 @@ public class Statement extends Expression {
 			builder.append("if (");
 			tabs = this.ifCondition.emit(builder, tabs);
 			builder.append(") ");
-			this.ifBranch.emit(builder, this.ifBranch instanceof Expr ? 0 : tabs);
+			this.ifBranch.emit(builder, this.ifBranch instanceof Block ? tabs : 0);
 
-			if (!(this.ifBranch instanceof Block)) {
-				indent(builder, tabs);
-			} else {
+			if (this.ifBranch instanceof Block) {
 				builder.deleteCharAt(builder.length() - 1);
 				builder.append(' ');
 			}
@@ -625,11 +677,9 @@ public class Statement extends Expression {
 					tabs = this.ifElseConditions.get(i).emit(builder, tabs);
 					builder.append(") ");
 					Statement branch = this.ifElseBranches.get(i);
-					branch.emit(builder, branch instanceof Expr ? 0 : tabs);
+					branch.emit(builder, branch instanceof Block ? tabs : 0);
 
-					if (!(branch instanceof Block)) {
-						indent(builder, tabs);
-					} else {
+					if (branch instanceof Block) {
 						builder.deleteCharAt(builder.length() - 1);
 						builder.append(' ');
 					}
@@ -638,12 +688,27 @@ public class Statement extends Expression {
 
 			if (this.elseBranch != null) {
 				builder.append("else ");
-				this.elseBranch.emit(builder, this.elseBranch instanceof Expr ? 0 : tabs);
+				this.elseBranch.emit(builder, this.elseBranch instanceof Block ? tabs : 0);
 			}
 
 			builder.append('\n');
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.ifBranch.rename();
+			this.ifCondition.rename();
+
+			if (this.ifElseConditions != null) {
+				this.rename(this.ifElseConditions);
+				this.renameStatements(this.ifElseBranches);
+			}
+
+			if (this.elseBranch != null) {
+				this.elseBranch.rename();
+			}
 		}
 	}
 
@@ -693,6 +758,23 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			if (this.init != null) {
+				this.init.rename();
+			}
+
+			if (this.condition != null) {
+				this.condition.rename();
+			}
+
+			if (this.increment != null) {
+				this.increment.rename();
+			}
+
+			this.body.rename();
+		}
 	}
 
 	public static class Var extends Statement {
@@ -737,6 +819,15 @@ public class Statement extends Expression {
 			builder.append(";\n");
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.rename(this.self);
+
+			if (this.init != null) {
+				this.init.rename();
+			}
+		}
 	}
 
 	public static class Foreach extends Statement {
@@ -767,6 +858,13 @@ public class Statement extends Expression {
 			this.body.emit(builder, this.body instanceof Expr ? 0 : tabs);
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.init.rename();
+			this.in.rename();
+			this.body.rename();
 		}
 	}
 
@@ -804,6 +902,12 @@ public class Statement extends Expression {
 			}
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.condition.rename();
+			this.body.rename();
 		}
 	}
 
@@ -910,6 +1014,18 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.what.rename();
+
+			if (this.branches != null) {
+				for (SwitchBranch branch : this.branches) {
+					this.rename(branch.cases);
+					branch.block.rename();
+				}
+			}
+		}
 	}
 
 	public static class TryException {
@@ -968,6 +1084,23 @@ public class Statement extends Expression {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.tryBranch.rename();
+
+			if (this.tryVars != null) {
+				this.renameStatements(this.tryBranches);
+
+				for (TryException exception : this.tryVars) {
+					exception.name = this.updateName(exception.name);
+
+					for (int i = 0; i < exception.types.size(); i++) {
+						exception.types.set(i, this.updateName(exception.types.get(i)));
+					}
+				}
+			}
+		}
 	}
 
 	public static class Throw extends Statement {
@@ -985,6 +1118,11 @@ public class Statement extends Expression {
 			builder.append(";\n");
 
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.var.rename();
 		}
 	}
 }

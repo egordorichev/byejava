@@ -1,5 +1,6 @@
 package org.rexcellentgames.byejava.ast;
 
+import org.rexcellentgames.byejava.scanner.Keywords;
 import org.rexcellentgames.byejava.scanner.TokenType;
 
 import java.util.ArrayList;
@@ -62,7 +63,12 @@ public class Expression extends Ast {
 
 		@Override
 		public void rename() {
-			this.name = this.checkType(this.name);
+			if (Character.isUpperCase(this.name.charAt(0)) || Keywords.reserved.containsKey(this.name)) {
+				this.name = this.checkType(this.name);
+			} else {
+				this.name = this.updateName(this.name);
+			}
+
 			this.checkTypes(this.generetics);
 		}
 	}
@@ -182,6 +188,12 @@ public class Expression extends Ast {
 
 			return tabs;
 		}
+
+		@Override
+		public void rename() {
+			this.from.rename();
+			this.field = this.updateName(this.field);
+		}
 	}
 
 	public static class Set extends Expression {
@@ -205,6 +217,7 @@ public class Expression extends Ast {
 
 		@Override
 		public void rename() {
+			this.to.rename();
 			this.from.rename();
 			this.field = this.updateName(this.field);
 		}
@@ -411,7 +424,6 @@ public class Expression extends Ast {
 			}
 
 			builder.append('}');
-
 			return tabs;
 		}
 

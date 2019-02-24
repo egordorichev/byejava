@@ -181,13 +181,15 @@ public class Parser {
 
 		if (this.match(TokenType.NEW)) {
 			this.consume(TokenType.IDENTIFIER, "Class name expected");
-			Expression expression = new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
+			Expression.Variable expression = new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
 
 			if (this.match(TokenType.LEFT_BRACKET)) {
-				Expression index = this.parseExpression();
 				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
+				expression.array = true;
 
-				expression = new Expression.Index(expression, index);
+				if (this.match(TokenType.LEFT_BRACE)) {
+					return this.parseArray();
+				}
 			}
 
 			return expression;
@@ -219,7 +221,16 @@ public class Parser {
 							}
 
 							builder.append('.');
-							builder.append(this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code));
+							type = this.consume(TokenType.IDENTIFIER, "Type name expected").getLexeme(this.code);
+							builder.append(type);
+
+							if (!(Character.isUpperCase(type.charAt(0)) || Keywords.reserved.containsKey(type))) {
+								this.current = start;
+
+								Expression expression = this.parseExpression();
+								this.consume(TokenType.RIGHT_PAREN, "')' expected");
+								return new Expression.Grouping(expression);
+							}
 						}
 
 						type = builder.toString();
@@ -244,28 +255,32 @@ public class Parser {
 		}
 
 		if (this.match(TokenType.LEFT_BRACE)) {
-			ArrayList<Expression> values = null;
-
-			while (!this.match(TokenType.RIGHT_BRACE)) {
-				if (values == null) {
-					values = new ArrayList<>();
-				}
-
-				values.add(this.parseExpression());
-
-				if (this.peek().type == TokenType.RIGHT_BRACE) {
-					this.advance();
-					break;
-				}
-
-				this.consume(TokenType.COMMA, "',' expected");
-			}
-
-			return new Expression.Array(values);
+			return this.parseArray();
 		}
 
 		this.error("Unexpected token " + this.peek().type);
 		return null;
+	}
+
+	private Expression parseArray() {
+		ArrayList<Expression> values = null;
+
+		while (!this.match(TokenType.RIGHT_BRACE)) {
+			if (values == null) {
+				values = new ArrayList<>();
+			}
+
+			values.add(this.parseExpression());
+
+			if (this.peek().type == TokenType.RIGHT_BRACE) {
+				this.advance();
+				break;
+			}
+
+			this.consume(TokenType.COMMA, "',' expected");
+		}
+
+		return new Expression.Array(values);
 	}
 
 	private Expression finishCall(Expression expression) {

@@ -1,5 +1,7 @@
 package org.rexcellentgames.byejava.ast;
 
+import org.rexcellentgames.byejava.renamer.Renamer;
+
 import java.util.ArrayList;
 
 public class Ast {
@@ -46,7 +48,7 @@ public class Ast {
 		}
 
 		temp = temp.substring(0, 1).toUpperCase() +
-			spaces + temp.substring(1).toLowerCase() + " ";
+			spaces + temp.substring(1).toLowerCase();
 
 		return temp;
 
@@ -55,6 +57,28 @@ public class Ast {
 	protected String checkType(String type) {
 		if (type == null) {
 			return null;
+		}
+
+		if (TypeRegistry.reserved.containsKey(type)) {
+			return type;
+		}
+
+		Type tp = TypeRegistry.types.getOrDefault(type, null);
+
+		if (tp != null) {
+			if (tp.module != null) {
+				for (Statement statement : Renamer.ast) {
+					if (statement instanceof Statement.Import) {
+						Statement.Import imp = ((Statement.Import) statement);
+
+						if (imp.module.equals(tp.originalModule)) {
+							imp.setModule(tp.module);
+						}
+					}
+				}
+			}
+
+			return tp.name;
 		}
 
 		return toCamelCase(type);

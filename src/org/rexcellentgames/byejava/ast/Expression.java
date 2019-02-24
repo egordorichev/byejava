@@ -23,6 +23,7 @@ public class Expression extends Ast {
 		public String name;
 		public ArrayList<Generetic> generetics;
 		public boolean construct;
+		public boolean array;
 
 		public Variable(String name, ArrayList<Generetic> generetics, boolean construct) {
 			this.name = name;
@@ -52,12 +53,16 @@ public class Expression extends Ast {
 				builder.append('>');
 			}
 
+			if (this.array) {
+				builder.append("[]");
+			}
+
 			return tabs;
 		}
 
 		@Override
 		public void rename() {
-			this.name = this.updateName(name);
+			this.name = this.checkType(this.name);
 			this.checkTypes(this.generetics);
 		}
 	}

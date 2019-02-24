@@ -236,16 +236,8 @@ public class Statement extends Expression {
 					builder.append('\n');
 					indent(builder, tabs);
 					builder.append("public ").append(this.name).append("() {\n");
-
-					for (int i = 0; i < this.init.size(); i++) {
-						indent(builder, tabs + 1);
-						this.init.get(i).emit(builder, tabs + 1);
-
-						if (i < this.init.size() - 1) {
-							builder.append('\n');
-						}
-					}
-
+					indent(builder, tabs + 1);
+					builder.append("_Init();\n");
 					indent(builder, tabs);
 					builder.append("}\n");
 				}
@@ -388,6 +380,17 @@ public class Statement extends Expression {
 
 			builder.append(";\n");
 			return tabs;
+		}
+
+		@Override
+		public void rename() {
+			this.name = this.updateName(this.name);
+			this.type = this.checkType(this.type);
+			this.checkTypes(this.generetics);
+
+			if (this.init != null) {
+				this.init.rename();
+			}
 		}
 	}
 
@@ -604,9 +607,9 @@ public class Statement extends Expression {
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			indent(builder, tabs);
-			builder.append("if ");
+			builder.append("if (");
 			tabs = this.ifCondition.emit(builder, tabs);
-			builder.append(' ');
+			builder.append(") ");
 			this.ifBranch.emit(builder, this.ifBranch instanceof Expr ? 0 : tabs);
 
 			if (!(this.ifBranch instanceof Block)) {
@@ -618,9 +621,9 @@ public class Statement extends Expression {
 
 			if (this.ifElseConditions != null) {
 				for (int i = 0; i < this.ifElseConditions.size(); i++) {
-					builder.append("else if ");
+					builder.append("else if (");
 					tabs = this.ifElseConditions.get(i).emit(builder, tabs);
-					builder.append(' ');
+					builder.append(") ");
 					Statement branch = this.ifElseBranches.get(i);
 					branch.emit(builder, branch instanceof Expr ? 0 : tabs);
 
@@ -826,16 +829,26 @@ public class Statement extends Expression {
 
 	public static class Import extends Statement {
 		public String module;
+		public String realModule;
 
 		public Import(String module) {
-			int dot = module.lastIndexOf('.');
-			this.module = dot == -1 ? module : module.substring(0, dot);
+			this.setModule(module);
+		}
+
+		public void setModule(String module) {
+			this.module = module;
+			this.realModule = this.getModule();
 		}
 
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
-			builder.append("using ").append(this.module).append(";\n");
+			builder.append("using ").append(this.realModule).append(";\n");
 			return tabs;
+		}
+
+		public String getModule() {
+			int dot = module.lastIndexOf('.');
+			return dot == -1 ? module : module.substring(0, dot);
 		}
 	}
 

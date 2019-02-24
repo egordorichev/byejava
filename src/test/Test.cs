@@ -1,17 +1,15 @@
+using java.util;
+
 namespace test {
 	public class Test {
 		protected void _Init() {
 			{
-				a = c + d;
+				if (BurningKnight.instance != null && (BurningKnight.instance.rage) && Exit.instance != null) {
+
+				} 
 			}
 		}
 
-		public String a = "10";
 
-		public Test() {
-			{
-				a = c + d;
-			}
-		}
 	}
 }

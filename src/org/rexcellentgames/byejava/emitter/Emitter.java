@@ -30,7 +30,7 @@ public class Emitter {
 				boolean found = false;
 
 				for (Statement.Import i : imports) {
-					if (i.module.equals(im.module)) {
+					if (i.realModule.equals(im.realModule)) {
 						found = true;
 						break;
 					}

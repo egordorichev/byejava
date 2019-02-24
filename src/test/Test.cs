@@ -79,93 +79,93 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 			None
 		}
 
-		public float Accuracy;
-		public float Al;
 		public static List<Player> All = new List<>();
-		private Animationdata Animation;
 		public static Textureregion Balloon = Graphics.Gettexture("item-red_balloon");
-		private int Bombs;
 		public int Burnlevel;
-		public bool Drawinvt;
 		public static bool Dulldamage;
-		private float Fa;
-		public int Fireresist;
-		public int Flight;
-		public int Frostlevel;
-		public float Goldmodifier = 1f;
-		private bool Gothit;
-		private bool Hadenemies;
-		public bool Hasbkkey;
-		public bool Hasredline;
-		private Textureregion Hat;
 		public static string Hatid;
+		public static Player Instance;
+		public static Entity Ladder;
+		public static float Mobspawnmodifier = 1f;
+		public static Shaderprogram Shader;
+		public static bool Showstats;
+		public static string Skin;
+		public static Item Startingitem;
+		public static bool Sucked = false;
+		public static Type Toset = Type.None;
 		private static Animation Headanimations = Animation.Make("actor-gobbo", "-gobbo");
 		private static Animationdata Headhurt = Headanimations.Get("hurt");
 		private static Animationdata Headidle = Headanimations.Get("idle");
 		private static Animationdata Headroll = Headanimations.Get("roll");
 		private static Animationdata Headrun = Headanimations.Get("run");
+		private static int[] Offsets = { 0, 0, 0, -1, -1, -1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+		private static Textureregion Playertexture = Graphics.Gettexture("props-gobbo_full");
+		private static Dictionary<string, Animation> Skins = new Dictionary<>();
+		private static Textureregion Wing = Graphics.Gettexture("item-half_wing");
+		public float Accuracy;
+		public float Al;
+		public bool Drawinvt;
+		public int Fireresist;
+		public int Flight;
+		public int Frostlevel;
+		public float Goldmodifier = 1f;
+		public bool Hasbkkey;
+		public bool Hasredline;
 		public float Heat;
-		private List<Itemholder> Holders = new List<>();
-		private Animationdata Hurt;
-		private Animationdata Idle;
-		public static Player Instance;
-		private Inventory Inventory;
-		private int Keys;
-		private Animationdata Killed;
-		public static Entity Ladder;
-		private float Last;
-		private float Lastblood;
-		private float Lastfx = 0;
-		private Vector2 Lastground = new Vector2();
 		public int Lavaresist;
 		public bool Leavesmall;
 		public int Leavevenom;
-		protected int Level;
-		private Pointlight Light;
-		protected float Mana;
-		protected int Manamax;
-		public static float Mobspawnmodifier = 1f;
-		private int Money;
-		private bool Moved;
-		private string Name;
 		public int Numcollectedhearts;
-		private int Numgoldenhearts;
-		private int Numironhearts;
-		private static int[] Offsets = { 0, 0, 0, -1, -1, -1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-		private bool Onground;
 		public Vector2 Orbitalring = new Vector2();
 		public Itempickupfx Pickupfx;
-		private static Textureregion Playertexture = Graphics.Gettexture("props-gobbo_full");
 		public int Poisonresist;
-		private Animationdata Roll;
-		private bool Rolled;
-		private bool Rolling;
 		public bool Rotating;
-		private Animationdata Run;
 		public int Sales;
 		public bool Seepath;
 		public bool Seesecrets;
-		public static Shaderprogram Shader;
-		public static bool Showstats;
-		public static string Skin;
-		private static Dictionary<string, Animation> Skins = new Dictionary<>();
-		public static Item Startingitem;
 		public int Step;
 		public float Stopt;
 		public int Stunresist;
-		public static bool Sucked = false;
-		private float Sx = 1f;
-		private float Sy = 1f;
-		private bool Teleport;
 		public bool Todeath;
-		public static Type Toset = Type.None;
 		public float Tt;
 		public Type Type;
 		public Uiinventory Ui;
 		public List<Uibuff> Uibuffs = new List<>();
+		protected int Level;
+		protected float Mana;
+		protected int Manamax;
+		private Animationdata Animation;
+		private int Bombs;
+		private float Fa;
+		private bool Gothit;
+		private bool Hadenemies;
+		private Textureregion Hat;
+		private List<Itemholder> Holders = new List<>();
+		private Animationdata Hurt;
+		private Animationdata Idle;
+		private Inventory Inventory;
+		private int Keys;
+		private Animationdata Killed;
+		private float Last;
+		private float Lastblood;
+		private float Lastfx = 0;
+		private Vector2 Lastground = new Vector2();
+		private Pointlight Light;
+		private int Money;
+		private bool Moved;
+		private string Name;
+		private int Numgoldenhearts;
+		private int Numironhearts;
+		private bool Onground;
+		private Animationdata Roll;
+		private bool Rolled;
+		private bool Rolling;
+		private Animationdata Run;
+		private float Sx = 1f;
+		private float Sy = 1f;
+		private bool Teleport;
 		private bool Wasfreezed;
 		private bool Waspoisoned;
-		private static Textureregion Wing = Graphics.Gettexture("item-half_wing");
 		private float Zvel;
 
 		public override Void Addbuff(Buff Buff) {
@@ -204,24 +204,6 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 			Numironhearts += A;
 		}
 
-		protected override bool Canhavebuff(Buff Buff) {
-			if ((this.Rolling || Fireresist > 0) && Buff is Burningbuff) {
-				return false;
-			} else if (Poisonresist > 0 && Buff is Poisonbuff) {
-				return false;
-			} else if ((this.Rolling || Stunresist > 0) && Buff is Freezebuff) {
-				return false;
-			} 
-
-			return base.Canhavebuff(Buff);
-		}
-
-		protected override Void Checkdeath() {
-			if (this.Hp == 0 && this.Numironhearts == 0 && this.Numgoldenhearts == 0) {
-				this.Shoulddie = true;
-			} 
-		}
-
 		public Void Checksecrets() {
 			if (this.Seesecrets) {
 				if (Room != null) {
@@ -244,10 +226,6 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 			} 
 		}
 
-		protected override Void Common() {
-			base.Common();
-		}
-
 		public override Void Destroy() {
 			base.Destroy();
 			World.Removelight(Light);
@@ -262,98 +240,6 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 
 		public bool Didgethit() {
 			return Gothit;
-		}
-
-		protected override Void Die(bool Force) {
-			if (this.Todeath) {
-				return;
-			} 
-
-			Uimap.Instance.Hide();
-			Ui.Ui.Ondeath();
-			this.Done = false;
-			int Num = Globalsave.Getint("deaths") + 1;
-			Globalsave.Put("deaths", Num);
-			Vector3 Vec = Camera.Game.Project(new Vector3(this.X + this.W / 2, this.Y + this.H / 2, 0));
-			Vec = Camera.Ui.Unproject(Vec);
-			Vec.Y = Display.Ui_height - Vec.Y;
-			Dungeon.Shocktime = 0;
-			Dungeon.Shockpos.X = (Vec.X) / Display.Ui_width;
-			Dungeon.Shockpos.Y = (Vec.Y) / Display.Ui_height;
-			this.Todeath = true;
-			this.T = 0;
-			Dungeon.Slowdown(0.5f, 1f);
-
-			if (Dungeon.Depth != -3) {
-				Achievements.Unlock(Achievements.Die);
-			} 
-
-			if (Num >= 50) {
-				Achievements.Unlock(Achievements.Unlock_isaac_head);
-			} 
-		}
-
-		protected override Void Dohurt(int A) {
-			if (this.Numgoldenhearts > 0) {
-				int D = Math.Min(this.Numgoldenhearts, -A);
-				this.Numgoldenhearts -= D;
-				A += D;
-
-				for (int I = 0; I < 10; I++) {
-					Pooffx Fx = new Pooffx();
-					Fx.X = this.X + this.W / 2;
-					Fx.Y = this.Y + this.H / 2;
-					Dungeon.Area.Add(Fx);
-				}
-
-				for (int I = 0; I < 10; I++) {
-					Pooffx Fx = new Pooffx();
-					Fx.X = this.X + this.W / 2;
-					Fx.Y = this.Y + this.H / 2;
-					Dungeon.Area.Add(Fx);
-				}
-
-				foreach (Mob Mob in Mob.All) {
-					if (Mob.Room == this.Room) {
-						Mob.Addbuff(new Freezebuff().Setduration(10));
-					} 
-				}
-			} 
-
-			if (this.Numironhearts > 0) {
-				int D = Math.Min(this.Numironhearts, -A);
-				this.Numironhearts -= D;
-				A += D;
-			} 
-
-			if (A < 0) {
-				this.Hp = Math.Max(0, this.Hp + A);
-			} 
-		}
-
-		private Void Dotp(bool Frominit) {
-			if (this.Teleport) {
-				this.Tp(this.Lastground.X, this.Lastground.Y);
-
-				return;
-			} 
-
-			if (Dungeon.Depth == -3) {
-
-			} else if (Dungeon.Depth == -1) {
-				Room Room = Dungeon.Level.Getrooms().Get(0);
-				this.Tp((Room.Left + Room.Getwidth() / 2) * 16 - 8, Room.Top * 16 + 32);
-			} else if (Ladder != null && (Dungeon.Loadtype != Entrance.Loadtype.Loading || (!Frominit && (Dungeon.Level.Findroomfor(this.X + this.W / 2, this.Y) == null)))) {
-				this.Tp(Ladder.X, Ladder.Y - 4);
-			} else if (Ladder == null) {
-				Log.Error("Null lader!");
-			} 
-
-			Vector3 Vec = Camera.Game.Project(new Vector3(Player.Instance.X + Player.Instance.W / 2, Player.Instance.Y + Player.Instance.H / 2, 0));
-			Vec = Camera.Ui.Unproject(Vec);
-			Vec.Y = Display.Game_height - Vec.Y / Display.Ui_scale;
-			Dungeon.Darkx = Vec.X / Display.Ui_scale;
-			Dungeon.Darky = Vec.Y;
 		}
 
 		public Void Generate() {
@@ -491,10 +377,6 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 				this.Inventory.Add(new Itemholder(Item));
 			}
 
-		}
-
-		protected override bool Ignorewater() {
-			return Slowliquidresist > 0;
 		}
 
 		public override Void Init() {
@@ -726,103 +608,6 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 			Dungeon.Flash(Color.White, 0.05f);
 			Camera.Shake(4f);
 			Audio.Playsfx("voice_gobbo_" + Random.Newint(1, 4), 1f, Random.Newfloat(0.9f, 1.9f));
-		}
-
-		protected override Void Onroomchange() {
-			base.Onroomchange();
-			Bot.Data.Clear();
-			Ingamestate.Checkmusic();
-
-			if (Dungeon.Depth > -1) {
-				if (Numcollectedhearts >= 6) {
-					Achievements.Unlock(Achievements.Unlock_meatboy);
-				} 
-
-				if (Hadenemies && !Gothit) {
-					Achievements.Unlock(Achievements.Unlock_halo);
-				} 
-			} 
-
-			this.Resethit();
-
-			if (this.Room != null) {
-				if (this.Room is Shoproom) {
-					Audio.Play("Shopkeeper");
-
-					if (Burningknight.Instance != null && !Burningknight.Instance.Getstate().Equals("unactive")) {
-						Burningknight.Instance.Become("await");
-					} 
-				} 
-
-				Hadenemies = false;
-			} 
-
-			this.Checksecrets();
-
-			if (Room != null) {
-				int Count = 0;
-
-				foreach (Mob Mob in Mob.All) {
-					if (Mob.Room == Room) {
-						Count++;
-					} 
-				}
-
-				if (Count > 0) {
-					this.Invt = Math.Max(this.Invt, 1f);
-				} 
-			} 
-		}
-
-		protected override Void Ontouch(short T, int X, int Y, int Info) {
-			if (T == Terrain.Water && !this.Isflying()) {
-				if (this.Hasbuff(Burningbuff.Gettype())) {
-					int Num = Globalsave.Getint("num_fire_out") + 1;
-					Globalsave.Put("num_fire_out", Num);
-
-					if (Num >= 50) {
-						Achievements.Unlock(Achievements.Unlock_water_bolt);
-					} 
-
-					this.Removebuff(Burningbuff.Gettype());
-
-					for (int I = 0; I < 20; I++) {
-						Steamfx Fx = new Steamfx();
-						Fx.X = this.X + Random.Newfloat(this.W);
-						Fx.Y = this.Y + Random.Newfloat(this.H);
-						Dungeon.Area.Add(Fx);
-					}
-				} 
-
-				if (this.Leavevenom > 0) {
-					Dungeon.Level.Venom(X, Y);
-				} 
-			} else {
-				if (!this.Isflying() && Bithelper.Isbitset(Info, 0) && !this.Hasbuff(Burningbuff.Gettype())) {
-					this.Addbuff(new Burningbuff());
-				} 
-
-				if (T == Terrain.Lava && !this.Isflying() && this.Lavaresist == 0) {
-					this.Modifyhp(-1, null, true);
-					this.Addbuff(new Burningbuff());
-
-					if (this.Isdead()) {
-						Achievements.Unlock(Achievements.Unlock_wings);
-					} 
-				} else if (!this.Isflying() && (T == Terrain.High_grass || T == Terrain.High_dry_grass)) {
-					Dungeon.Level.Set(X, Y, T == Terrain.High_grass ? Terrain.Grass : Terrain.Dry_grass);
-
-					for (int I = 0; I < 10; I++) {
-						Grassbreakfx Fx = new Grassbreakfx();
-						Fx.X = X * 16 + Random.Newfloat(16);
-						Fx.Y = Y * 16 + Random.Newfloat(16) - 8;
-						Dungeon.Area.Add(Fx);
-					}
-				} else if (!this.Isflying() && T == Terrain.Venom) {
-					this.Addbuff(new Poisonbuff());
-				} 
-			}
-
 		}
 
 		public Player() {
@@ -1563,6 +1348,221 @@ namespace org.rexcellentgames.burningknight.entity.creature.player {
 					} 
 				} 
 			} 
+		}
+
+		protected override bool Canhavebuff(Buff Buff) {
+			if ((this.Rolling || Fireresist > 0) && Buff is Burningbuff) {
+				return false;
+			} else if (Poisonresist > 0 && Buff is Poisonbuff) {
+				return false;
+			} else if ((this.Rolling || Stunresist > 0) && Buff is Freezebuff) {
+				return false;
+			} 
+
+			return base.Canhavebuff(Buff);
+		}
+
+		protected override Void Checkdeath() {
+			if (this.Hp == 0 && this.Numironhearts == 0 && this.Numgoldenhearts == 0) {
+				this.Shoulddie = true;
+			} 
+		}
+
+		protected override Void Common() {
+			base.Common();
+		}
+
+		protected override Void Die(bool Force) {
+			if (this.Todeath) {
+				return;
+			} 
+
+			Uimap.Instance.Hide();
+			Ui.Ui.Ondeath();
+			this.Done = false;
+			int Num = Globalsave.Getint("deaths") + 1;
+			Globalsave.Put("deaths", Num);
+			Vector3 Vec = Camera.Game.Project(new Vector3(this.X + this.W / 2, this.Y + this.H / 2, 0));
+			Vec = Camera.Ui.Unproject(Vec);
+			Vec.Y = Display.Ui_height - Vec.Y;
+			Dungeon.Shocktime = 0;
+			Dungeon.Shockpos.X = (Vec.X) / Display.Ui_width;
+			Dungeon.Shockpos.Y = (Vec.Y) / Display.Ui_height;
+			this.Todeath = true;
+			this.T = 0;
+			Dungeon.Slowdown(0.5f, 1f);
+
+			if (Dungeon.Depth != -3) {
+				Achievements.Unlock(Achievements.Die);
+			} 
+
+			if (Num >= 50) {
+				Achievements.Unlock(Achievements.Unlock_isaac_head);
+			} 
+		}
+
+		protected override Void Dohurt(int A) {
+			if (this.Numgoldenhearts > 0) {
+				int D = Math.Min(this.Numgoldenhearts, -A);
+				this.Numgoldenhearts -= D;
+				A += D;
+
+				for (int I = 0; I < 10; I++) {
+					Pooffx Fx = new Pooffx();
+					Fx.X = this.X + this.W / 2;
+					Fx.Y = this.Y + this.H / 2;
+					Dungeon.Area.Add(Fx);
+				}
+
+				for (int I = 0; I < 10; I++) {
+					Pooffx Fx = new Pooffx();
+					Fx.X = this.X + this.W / 2;
+					Fx.Y = this.Y + this.H / 2;
+					Dungeon.Area.Add(Fx);
+				}
+
+				foreach (Mob Mob in Mob.All) {
+					if (Mob.Room == this.Room) {
+						Mob.Addbuff(new Freezebuff().Setduration(10));
+					} 
+				}
+			} 
+
+			if (this.Numironhearts > 0) {
+				int D = Math.Min(this.Numironhearts, -A);
+				this.Numironhearts -= D;
+				A += D;
+			} 
+
+			if (A < 0) {
+				this.Hp = Math.Max(0, this.Hp + A);
+			} 
+		}
+
+		protected override bool Ignorewater() {
+			return Slowliquidresist > 0;
+		}
+
+		protected override Void Onroomchange() {
+			base.Onroomchange();
+			Bot.Data.Clear();
+			Ingamestate.Checkmusic();
+
+			if (Dungeon.Depth > -1) {
+				if (Numcollectedhearts >= 6) {
+					Achievements.Unlock(Achievements.Unlock_meatboy);
+				} 
+
+				if (Hadenemies && !Gothit) {
+					Achievements.Unlock(Achievements.Unlock_halo);
+				} 
+			} 
+
+			this.Resethit();
+
+			if (this.Room != null) {
+				if (this.Room is Shoproom) {
+					Audio.Play("Shopkeeper");
+
+					if (Burningknight.Instance != null && !Burningknight.Instance.Getstate().Equals("unactive")) {
+						Burningknight.Instance.Become("await");
+					} 
+				} 
+
+				Hadenemies = false;
+			} 
+
+			this.Checksecrets();
+
+			if (Room != null) {
+				int Count = 0;
+
+				foreach (Mob Mob in Mob.All) {
+					if (Mob.Room == Room) {
+						Count++;
+					} 
+				}
+
+				if (Count > 0) {
+					this.Invt = Math.Max(this.Invt, 1f);
+				} 
+			} 
+		}
+
+		protected override Void Ontouch(short T, int X, int Y, int Info) {
+			if (T == Terrain.Water && !this.Isflying()) {
+				if (this.Hasbuff(Burningbuff.Gettype())) {
+					int Num = Globalsave.Getint("num_fire_out") + 1;
+					Globalsave.Put("num_fire_out", Num);
+
+					if (Num >= 50) {
+						Achievements.Unlock(Achievements.Unlock_water_bolt);
+					} 
+
+					this.Removebuff(Burningbuff.Gettype());
+
+					for (int I = 0; I < 20; I++) {
+						Steamfx Fx = new Steamfx();
+						Fx.X = this.X + Random.Newfloat(this.W);
+						Fx.Y = this.Y + Random.Newfloat(this.H);
+						Dungeon.Area.Add(Fx);
+					}
+				} 
+
+				if (this.Leavevenom > 0) {
+					Dungeon.Level.Venom(X, Y);
+				} 
+			} else {
+				if (!this.Isflying() && Bithelper.Isbitset(Info, 0) && !this.Hasbuff(Burningbuff.Gettype())) {
+					this.Addbuff(new Burningbuff());
+				} 
+
+				if (T == Terrain.Lava && !this.Isflying() && this.Lavaresist == 0) {
+					this.Modifyhp(-1, null, true);
+					this.Addbuff(new Burningbuff());
+
+					if (this.Isdead()) {
+						Achievements.Unlock(Achievements.Unlock_wings);
+					} 
+				} else if (!this.Isflying() && (T == Terrain.High_grass || T == Terrain.High_dry_grass)) {
+					Dungeon.Level.Set(X, Y, T == Terrain.High_grass ? Terrain.Grass : Terrain.Dry_grass);
+
+					for (int I = 0; I < 10; I++) {
+						Grassbreakfx Fx = new Grassbreakfx();
+						Fx.X = X * 16 + Random.Newfloat(16);
+						Fx.Y = Y * 16 + Random.Newfloat(16) - 8;
+						Dungeon.Area.Add(Fx);
+					}
+				} else if (!this.Isflying() && T == Terrain.Venom) {
+					this.Addbuff(new Poisonbuff());
+				} 
+			}
+
+		}
+
+		private Void Dotp(bool Frominit) {
+			if (this.Teleport) {
+				this.Tp(this.Lastground.X, this.Lastground.Y);
+
+				return;
+			} 
+
+			if (Dungeon.Depth == -3) {
+
+			} else if (Dungeon.Depth == -1) {
+				Room Room = Dungeon.Level.Getrooms().Get(0);
+				this.Tp((Room.Left + Room.Getwidth() / 2) * 16 - 8, Room.Top * 16 + 32);
+			} else if (Ladder != null && (Dungeon.Loadtype != Entrance.Loadtype.Loading || (!Frominit && (Dungeon.Level.Findroomfor(this.X + this.W / 2, this.Y) == null)))) {
+				this.Tp(Ladder.X, Ladder.Y - 4);
+			} else if (Ladder == null) {
+				Log.Error("Null lader!");
+			} 
+
+			Vector3 Vec = Camera.Game.Project(new Vector3(Player.Instance.X + Player.Instance.W / 2, Player.Instance.Y + Player.Instance.H / 2, 0));
+			Vec = Camera.Ui.Unproject(Vec);
+			Vec.Y = Display.Game_height - Vec.Y / Display.Ui_scale;
+			Dungeon.Darkx = Vec.X / Display.Ui_scale;
+			Dungeon.Darky = Vec.Y;
 		}
 	}
 }

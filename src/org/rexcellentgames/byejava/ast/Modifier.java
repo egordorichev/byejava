@@ -16,4 +16,28 @@ public class Modifier {
 	public Modifier() {
 
 	}
+
+	public int compareTo(Modifier modifier) {
+		if (this.isStatic && !modifier.isStatic) {
+			return -1;
+		}
+
+		if (this.isFinal && !modifier.isFinal) {
+			return -1;
+		}
+
+		if (this.access == modifier.access) {
+			return 0;
+		}
+
+		if (this.access == Access.PUBLIC) {
+			return -1;
+		}
+
+		if (this.access == Access.PROTECTED) {
+			return modifier.access == Access.PUBLIC ? 1 : -1;
+		}
+
+		return 1;
+	}
 }

@@ -210,13 +210,15 @@ public class Statement extends Expression {
 					}
 				}
 
+				Comparator<Field> comparator = new Comparator<Field>() {
+					@Override
+					public int compare(Field s1, Field s2) {
+						return s1.modifier.compareTo(s2.modifier);
+					}
+				};
+
 				if (this.fields != null) {
-					Collections.sort(this.fields, new Comparator<Field>() {
-						@Override
-						public int compare(Field s1, Field s2) {
-							return s1.name.compareToIgnoreCase(s2.name);
-						}
-					});
+					Collections.sort(this.fields, comparator);
 
 					for (int i = 0; i < this.fields.size(); i++) {
 						tabs = this.fields.get(i).emit(builder, tabs);
@@ -230,12 +232,7 @@ public class Statement extends Expression {
 				boolean calledInit = false;
 
 				if (this.methods != null) {
-					Collections.sort(this.methods, new Comparator<Field>() {
-						@Override
-						public int compare(Field s1, Field s2) {
-							return s1.name.compareToIgnoreCase(s2.name);
-						}
-					});
+					Collections.sort(this.methods, comparator);
 
 					for (int i = 0; i < this.methods.size(); i++) {
 						Method method = this.methods.get(i);

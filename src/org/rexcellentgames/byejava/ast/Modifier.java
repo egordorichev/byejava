@@ -18,7 +18,7 @@ public class Modifier {
 	}
 
 	public int compareTo(Modifier modifier) {
-		if (this.isStatic && !modifier.isStatic) {
+		/*if (this.isStatic && !modifier.isStatic) {
 			return -1;
 		}
 
@@ -38,6 +38,7 @@ public class Modifier {
 			return modifier.access == Access.PUBLIC ? 1 : -1;
 		}
 
-		return 1;
+		return 1;*/
+		return 0;
 	}
 }

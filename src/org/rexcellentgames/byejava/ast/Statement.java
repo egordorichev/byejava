@@ -327,9 +327,9 @@ public class Statement extends Expression {
 		public String type;
 		public Modifier modifier;
 		public ArrayList<Generetic> generetics;
-		public boolean array;
+		public int array;
 
-		public Field(Expression init, String type, String name, Modifier modifier, ArrayList<Generetic> generetics,boolean array) {
+		public Field(Expression init, String type, String name, Modifier modifier, ArrayList<Generetic> generetics, int array) {
 			this.init = init;
 			this.type = type;
 			this.name = name;
@@ -360,25 +360,16 @@ public class Statement extends Expression {
 				builder.append(this.type);
 
 				if (this.generetics != null && !(this instanceof Method)) {
-					builder.append('<');
-
-					for (int i = 0; i < this.generetics.size(); i++) {
-						builder.append(this.generetics.get(i).name);
-
-						if (i < this.generetics.size() - 1) {
-							builder.append(", ");
-						}
-					}
-
-					builder.append('>');
+					emitGeneric(builder, this.generetics);
 				}
 
 				builder.append(' ');
 			}
 
-			if (this.array) {
+			while (this.array > 0) {
 				builder.deleteCharAt(builder.length() - 1);
 				builder.append("[] ");
+				this.array --;
 			}
 
 			builder.append(this.name);
@@ -475,7 +466,7 @@ public class Statement extends Expression {
 		public boolean override;
 
 		public Method(Expression init, String type, String name, Modifier modifier, Block block, ArrayList<Argument> arguments, ArrayList<Generetic> generetics) {
-			super(init, type, name, modifier, generetics, false);
+			super(init, type, name, modifier, generetics, 0);
 
 			this.block = block;
 			this.arguments = arguments;
@@ -543,7 +534,10 @@ public class Statement extends Expression {
 		@Override
 		public void rename() {
 			super.rename();
-			this.block.rename();
+
+			if (this.block != null) {
+				this.block.rename();
+			}
 
 			if (this.arguments != null) {
 				for (Argument argument : this.arguments) {
@@ -789,21 +783,12 @@ public class Statement extends Expression {
 			builder.append(this.self.type);
 
 			if (this.self.generetics != null) {
-				builder.append('<');
-
-				for (int i = 0; i < this.self.generetics.size(); i++) {
-					builder.append(this.self.generetics.get(i).name);
-
-					if (i < this.self.generetics.size() - 1) {
-						builder.append(", ");
-					}
-				}
-
-				builder.append('>');
+				emitGeneric(builder, this.self.generetics);
 			}
 
-			if (this.self.array) {
+			while (this.self.array > 0) {
 				builder.append("[]");
+				this.self.array--;
 			}
 
 			builder.append(' ').append(this.self.name);

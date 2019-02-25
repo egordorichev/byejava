@@ -7,9 +7,9 @@ public class Argument {
 	public String type;
 	public ArrayList<Generetic> generetics;
 	public boolean varg;
-	public boolean array;
+	public int array;
 
-	public Argument(String name, String type, ArrayList<Generetic> generetics, boolean varg, boolean array) {
+	public Argument(String name, String type, ArrayList<Generetic> generetics, boolean varg, int array) {
 		this.name = name;
 		this.type = type;
 		this.generetics = generetics;

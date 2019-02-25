@@ -32,6 +32,7 @@ public enum TokenType {
 	QUESTION,
 	// One or two character tokens.
 	BANG, BANG_EQUAL,
+	LESS_LESS, TILD,
 	SLASH, SLASH_EQUAL,
 	PERCENT, PERCENT_EQUAL,
 	STAR, STAR_EQUAL,

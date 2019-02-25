@@ -24,12 +24,14 @@ public class Expression extends Ast {
 		public String name;
 		public ArrayList<Generetic> generetics;
 		public boolean construct;
-		public boolean array;
+		public int array;
+		public ArrayList<Expression> index;
 
-		public Variable(String name, ArrayList<Generetic> generetics, boolean construct) {
+		public Variable(String name, ArrayList<Generetic> generetics, boolean construct, ArrayList<Expression> index) {
 			this.name = name;
 			this.generetics = generetics;
 			this.construct = construct;
+			this.index = index;
 		}
 
 		@Override
@@ -54,8 +56,16 @@ public class Expression extends Ast {
 				builder.append('>');
 			}
 
-			if (this.array) {
-				builder.append("[]");
+			while (this.array > 0) {
+				this.array --;
+
+				if (this.index != null) {
+					builder.append('[');
+					this.index.get(this.array).emit(builder, 0);
+					builder.append(']');
+				} else {
+					builder.append("[]");
+				}
 			}
 
 			return tabs;
@@ -70,6 +80,10 @@ public class Expression extends Ast {
 			}
 
 			this.checkTypes(this.generetics);
+
+			if (this.index != null) {
+				this.rename(this.index);
+			}
 		}
 	}
 
@@ -85,8 +99,12 @@ public class Expression extends Ast {
 		@Override
 		public int emit(StringBuilder builder, int tabs) {
 			switch (this.operator) {
+				case MINUS_MINUS: builder.append("--"); break;
+				case PLUS_PLUS: builder.append("++"); break;
 				case MINUS: builder.append('-'); break;
+				case PLUS: builder.append('+'); break;
 				case BANG: builder.append('!'); break;
+				case TILD: builder.append('~'); break;
 			}
 
 			return this.right.emit(builder, tabs);
@@ -160,6 +178,9 @@ public class Expression extends Ast {
 				case GREATER: builder.append(" > "); break;
 				case LESS: builder.append(" < "); break;
 				case INSTANCEOF: builder.append(" is "); break;
+				case AMPERSAND: builder.append(" & "); break;
+				case LESS_LESS: builder.append(" << "); break;
+				case BAR: builder.append(" | "); break;
 			}
 
 			return this.right.emit(builder, tabs);

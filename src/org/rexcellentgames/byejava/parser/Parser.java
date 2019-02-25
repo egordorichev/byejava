@@ -145,6 +145,10 @@ public class Parser {
 				generetic.name = this.consumeType();
 				generetics.add(generetic);
 
+				if (this.match(TokenType.LESS)) {
+					generetic.generetics = this.parseVarGenerics(true);
+				}
+
 				if (this.peek().type != TokenType.GREATER) {
 					this.consume(TokenType.COMMA, "',' expected");
 				}
@@ -181,11 +185,19 @@ public class Parser {
 
 		if (this.match(TokenType.NEW)) {
 			this.consume(TokenType.IDENTIFIER, "Class name expected");
-			Expression.Variable expression = new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true);
+			Expression.Variable expression = new Expression.Variable(this.peekPrevious().getLexeme(this.code), parseVarGenerics(false), true, null);
 
-			if (this.match(TokenType.LEFT_BRACKET)) {
+			while (this.match(TokenType.LEFT_BRACKET)) {
+				if (this.peek().type != TokenType.RIGHT_BRACKET) {
+					if (expression.index == null) {
+						expression.index = new ArrayList<>();
+					}
+
+					expression.index.add(this.parseExpression());
+				}
+
 				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
-				expression.array = true;
+				expression.array ++;
 
 				if (this.match(TokenType.LEFT_BRACE)) {
 					return this.parseArray();
@@ -196,7 +208,7 @@ public class Parser {
 		}
 
 		if (this.match(TokenType.IDENTIFIER)) {
-			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), null, false);
+			return new Expression.Variable(this.peekPrevious().getLexeme(this.code), null, false, null);
 		}
 
 		if (this.match(TokenType.LEFT_PAREN)) {
@@ -347,7 +359,7 @@ public class Parser {
 	}
 
 	private Expression parseUnary() {
-		if (this.match(TokenType.MINUS, TokenType.BANG)) {
+		if (this.match(TokenType.MINUS, TokenType.BANG, TokenType.PLUS_PLUS, TokenType.MINUS_MINUS, TokenType.PLUS, TokenType.TILD)) {
 			TokenType operator = this.peekPrevious().type;
 			return new Expression.Unary(operator, this.parseUnary());
 		}
@@ -369,7 +381,7 @@ public class Parser {
 	private Expression parseAddition() {
 		Expression expression = this.parseMultiplication();
 
-		while (this.match(TokenType.PLUS, TokenType.MINUS, TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL)) {
+		while (this.match(TokenType.PLUS, TokenType.MINUS, TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL, TokenType.AMPERSAND, TokenType.LESS_LESS, TokenType.BAR)) {
 			TokenType operator = this.peekPrevious().type;
 			expression = new Expression.Binary(operator, expression, this.parseMultiplication());
 		}
@@ -543,29 +555,39 @@ public class Parser {
 		return this.code.substring(start.start, this.peekPrevious().start + this.peekPrevious().size);
 	}
 
+	private ArrayList<Generetic> parseGeneric() {
+		ArrayList<Generetic> generetics = new ArrayList<>();
+
+		while (true) {
+			Generetic generetic = new Generetic();
+			generetics.add(generetic);
+			generetic.name = this.consumeType();
+
+			if (this.match(TokenType.LESS)) {
+				generetic.generetics = this.parseGeneric();
+			}
+
+			if (this.match(TokenType.GREATER)) {
+				break;
+			}
+
+			this.consume(TokenType.COMMA, "',' expected");
+		}
+
+		return generetics;
+	}
+
 	private Statement parseVariable(boolean end) {
 		String type = this.consumeType();
 		ArrayList<Generetic> generetics = null;
-		boolean array = false;
+		int array = 0;
 
 		if (this.match(TokenType.LESS)) {
-			generetics = new ArrayList<>();
-
-			while (true) {
-				Generetic generetic = new Generetic();
-				generetics.add(generetic);
-				generetic.name = this.consumeType();
-
-				if (this.match(TokenType.GREATER)) {
-					break;
-				}
-
-				this.consume(TokenType.COMMA, "',' expected");
-			}
+			generetics = this.parseGeneric();
 		}
 
-		if (this.match(TokenType.LEFT_BRACKET)) {
-			array = true;
+		while (this.match(TokenType.LEFT_BRACKET)) {
+			array ++;
 			this.consume(TokenType.RIGHT_BRACKET, "']' expected");
 		}
 
@@ -662,7 +684,7 @@ public class Parser {
 		this.match(TokenType.FINAL);
 
 		if (this.peek().type == TokenType.IDENTIFIER) {
-			if (!Character.isUpperCase(this.code.charAt(this.peek().start)) && !Keywords.reserved.containsKey(this.peek().getLexeme(this.code))) {
+			if ((!Character.isUpperCase(this.code.charAt(this.peek().start)) || Character.isUpperCase(this.code.charAt(this.peek().start + this.peek().size - 1))) && !Keywords.reserved.containsKey(this.peek().getLexeme(this.code))) {
 				return false;
 			}
 
@@ -684,7 +706,7 @@ public class Parser {
 							return false;
 						}
 
-						if (!Character.isUpperCase(this.code.charAt(token.start))) {
+						if (!Character.isUpperCase(this.code.charAt(token.start)) || Character.isUpperCase(this.code.charAt(token.start + token.size - 1))) {
 							return false;
 						}
 					}
@@ -908,15 +930,12 @@ public class Parser {
 			return parseEnumStatement(modifier);
 		}
 
-		if (this.peekPrevious().type != TokenType.IDENTIFIER) {
-			error("Field type expected");
-		}
+		this.current--;
+		String type = this.consumeType();
+		int arr = 0;
 
-		String type = this.peekPrevious().getLexeme(this.code);
-		boolean arr = false;
-
-		if (this.match(TokenType.LEFT_BRACKET)) {
-			arr = true;
+		while (this.match(TokenType.LEFT_BRACKET)) {
+			arr++;
 			this.consume(TokenType.RIGHT_BRACKET, "']' expected");
 		}
 
@@ -930,8 +949,8 @@ public class Parser {
 		if (this.peek().type == TokenType.IDENTIFIER) {
 			name = this.advance().getLexeme(this.code);
 
-			if (this.match(TokenType.LEFT_BRACKET)) {
-				arr = true;
+			while (this.match(TokenType.LEFT_BRACKET)) {
+				arr++;
 				this.consume(TokenType.RIGHT_BRACKET, "']' expected");
 			}
 		} else {
@@ -947,9 +966,11 @@ public class Parser {
 			ArrayList<Argument> arguments = new ArrayList<>();
 
 			while (!this.match(TokenType.RIGHT_PAREN)) {
-				String argumentType = this.consume(TokenType.IDENTIFIER, "Argument type expected").getLexeme(this.code);
+				this.match(TokenType.FINAL);
+
+				String argumentType = this.consumeType();
 				ArrayList<Generetic> generetics = null;
-				boolean array = false;
+				int array = 0;
 
 				if (this.match(TokenType.LESS)) {
 					generetics = new ArrayList<>();
@@ -966,16 +987,16 @@ public class Parser {
 					}
 				}
 
-				if (this.match(TokenType.LEFT_BRACKET)) {
-					array = true;
+				while (this.match(TokenType.LEFT_BRACKET)) {
+					array++;
 					this.consume(TokenType.RIGHT_BRACKET, "']' expected");
 				}
 
 				boolean varg = this.match(TokenType.DOT_DOT_DOT);
 				String argumentName = this.consume(TokenType.IDENTIFIER, "Argument name expected").getLexeme(this.code);
 
-				if (this.match(TokenType.LEFT_BRACKET)) {
-					array = true;
+				while (this.match(TokenType.LEFT_BRACKET)) {
+					array++;
 					this.consume(TokenType.RIGHT_BRACKET, "']' expected");
 				}
 
@@ -1006,7 +1027,7 @@ public class Parser {
 	}
 
 	private Statement parseClassStatement(Modifier modifier, Expression.Call call) {
-		Token name = call == null ? this.consume(TokenType.IDENTIFIER, "Class name expected") : null;
+		String name = call == null ? this.consumeType() : null;
 		String base = null;
 		ArrayList<String> implementations = null;
 		ArrayList<Statement.Field> fields = null;
@@ -1027,7 +1048,7 @@ public class Parser {
 					generetic.name = this.consumeType();
 
 					if (this.match(TokenType.EXTENDS)) {
-						generetic.extend = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
+						generetic.extend = this.consumeType();
 					}
 
 					if (this.match(TokenType.GREATER)) {
@@ -1039,7 +1060,7 @@ public class Parser {
 			}
 
 			if (this.match(TokenType.EXTENDS)) {
-				base = this.consume(TokenType.IDENTIFIER, "Class name expected").getLexeme(this.code);
+				base = this.consumeType();
 				baseGeneric = this.parseVarGenerics(false);
 			}
 
@@ -1111,7 +1132,7 @@ public class Parser {
 			}
 		}
 
-		return new Statement.Class(name == null ? null : name.getLexeme(this.code), base, baseGeneric, implementations, fields, modifier, methods, inner, init, generetics, call);
+		return new Statement.Class(name, base, baseGeneric, implementations, fields, modifier, methods, inner, init, generetics, call);
 	}
 
 	private Statement parseDeclaration(Modifier modifier) {
@@ -1186,30 +1207,6 @@ public class Parser {
 		}
 	}
 
-	private void sync() {
-		this.hadError = true;
-		this.advance();
-
-		while (!this.isAtEnd()) {
-			TokenType type = this.peek().type;
-
-			switch (type) {
-				case CLASS:
-				case IF:
-				case ELSE:
-				case SWITCH:
-				case PUBLIC:
-				case PRIVATE:
-				case PROTECTED:
-				case ENUM:
-				case TRY:
-					break;
-
-				default: this.advance();
-			}
-		}
-	}
-
 	public ArrayList<Statement> parse() {
 		ArrayList<Statement> statements = new ArrayList<>();
 
@@ -1219,7 +1216,8 @@ public class Parser {
 			}
 		} catch (Error error) {
 			error.printStackTrace();
-			this.sync();
+			this.hadError = true;
+			return statements;
 		}
 
 		while (this.match(TokenType.IMPORT)) {
@@ -1227,7 +1225,8 @@ public class Parser {
 				this.tryAdd(statements, this.parseImportStatement());
 			} catch (Error error) {
 				error.printStackTrace();
-				this.sync();
+				this.hadError = true;
+				return statements;
 			}
 		}
 
@@ -1236,7 +1235,8 @@ public class Parser {
 				this.tryAdd(statements, this.parseDeclaration(null));
 			} catch (Error error) {
 				error.printStackTrace();
-				this.sync();
+				this.hadError = true;
+				return statements;
 			}
 		}
 

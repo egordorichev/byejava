@@ -23,35 +23,16 @@ public class Ast {
 
 	}
 
-	private static String toCamelCase(String s) {
-		String[] parts = s.split(" ");
-		StringBuilder camelCaseString = new StringBuilder();
-
-		for (String part : parts) {
-			if (part != null && part.trim().length() > 0) {
-				camelCaseString.append(toProperCase(part));
-			} else {
-				camelCaseString.append(part).append(" ");
-			}
+	private static String toCamelCase(String str) {
+		if (str.length() == 0) {
+			return str;
 		}
 
-		return camelCaseString.toString();
-	}
-
-	private static String toProperCase(String s) {
-		String temp = s.trim();
-		String spaces = "";
-
-		if (temp.length() != s.length()) {
-			int startCharIndex = s.charAt(temp.indexOf(0));
-			spaces = s.substring(0, startCharIndex);
+		if (str.length() == 1) {
+			return str.substring(0, 1).toUpperCase();
 		}
 
-		temp = temp.substring(0, 1).toUpperCase() +
-			spaces + temp.substring(1).toLowerCase();
-
-		return temp;
-
+		return str.substring(0, 1).toUpperCase() + str.substring(1);
 	}
 
 	protected String checkType(String type) {
@@ -84,6 +65,25 @@ public class Ast {
 		return toCamelCase(type);
 	}
 
+	protected static void emitGeneric(StringBuilder builder, ArrayList<Generetic> generetics) {
+		builder.append('<');
+
+		for (int i = 0; i < generetics.size(); i++) {
+			Generetic generetic = generetics.get(i);
+			builder.append(generetic.name);
+
+			if (generetic.generetics != null) {
+				emitGeneric(builder, generetic.generetics);
+			}
+
+			if (i < generetics.size() - 1) {
+				builder.append(", ");
+			}
+		}
+
+		builder.append('>');
+	}
+
 	protected String updateName(String name) {
 		if (name == null) {
 			return null;
@@ -108,7 +108,9 @@ public class Ast {
 		}
 
 		for (Expression expression : expressions) {
-			expression.rename();
+			if (expression != null) {
+				expression.rename();
+			}
 		}
 	}
 

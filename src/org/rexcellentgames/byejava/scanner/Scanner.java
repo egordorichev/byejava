@@ -161,7 +161,19 @@ public class Scanner {
 		}
 
 		if (Character.isDigit(c)) {
-			while (Character.isDigit(this.peek())) {
+			boolean hex = this.match('x');
+
+			while (true) {
+				char ch = this.peek();
+
+				if (hex) {
+					ch = Character.toLowerCase(ch);
+				}
+
+				if (!(Character.isDigit(ch) || (hex && (ch == 'a' || ch == 'b' || ch == 'c' || ch == 'e' || ch == 'd' || ch == 'f')))) {
+					break;
+				}
+
 				this.advance();
 			}
 
@@ -178,6 +190,13 @@ public class Scanner {
 		}
 
 		if (isAlpha(c)) {
+			boolean at = c == '@';
+			boolean ok = true;
+
+			if (at && this.peek() != 'O') {
+				ok = false;
+			}
+
 			while (true) {
 				c = this.peek();
 
@@ -189,7 +208,11 @@ public class Scanner {
 				break;
 			}
 
-			return this.makeToken(this.getIdentifierType());
+			if (ok) {
+				return this.makeToken(this.getIdentifierType());
+			}
+
+			return this.scanToken();
 		}
 
 		switch (c) {
@@ -203,6 +226,7 @@ public class Scanner {
 			case ':': return this.makeToken(TokenType.COLON);
 			case '?': return this.makeToken(TokenType.QUESTION);
 			case ',': return this.makeToken(TokenType.COMMA);
+			case '~': return this.makeToken(TokenType.TILD);
 			case '=': return this.decideToken('=', TokenType.EQUAL_EQUAL, TokenType.EQUAL);
 			case '-': return this.decideToken('=', TokenType.MINUS_EQUAL, '-', TokenType.MINUS_MINUS, TokenType.MINUS);
 			case '+': return this.decideToken('=', TokenType.PLUS_EQUAL, '+', TokenType.PLUS_PLUS, TokenType.PLUS);
@@ -210,7 +234,7 @@ public class Scanner {
 			case '%': return this.decideToken('=', TokenType.PERCENT_EQUAL, TokenType.PERCENT);
 			case '*': return this.decideToken('=', TokenType.STAR_EQUAL, TokenType.STAR);
 			case '>': return this.decideToken('=', TokenType.GREATER_EQUAL, TokenType.GREATER);
-			case '<': return this.decideToken('=', TokenType.LESS_EQUAL, TokenType.LESS);
+			case '<': return this.decideToken('=', TokenType.LESS_EQUAL, '<', TokenType.LESS_LESS, TokenType.LESS);
 			case '!': return this.decideToken('=', TokenType.BANG_EQUAL, TokenType.BANG);
 			case '&': return this.decideToken('=', TokenType.AMPERSAND_EQUAL, '&', TokenType.AND, TokenType.AMPERSAND);
 			case '|': return this.decideToken('=', TokenType.BAR_EQUAL, '|', TokenType.OR, TokenType.BAR);
@@ -228,6 +252,9 @@ public class Scanner {
 			}
 
 			case '\"': {
+				boolean lastSlash = false;
+				char prev = '\0';
+
 				while (true) {
 					c = this.advance();
 
@@ -235,9 +262,17 @@ public class Scanner {
 						this.error("Unterminated string");
 					}
 
-					if (c == '\"') {
+					if (c == '\"' && !lastSlash) {
 						break;
 					}
+
+					if (c == '\\' && prev != '\\'){
+						lastSlash = true;
+					} else {
+						lastSlash = false;
+					}
+
+					prev = c;
 
 					if (c == '\n') {
 						this.line++;
@@ -261,7 +296,7 @@ public class Scanner {
 				return this.makeToken(TokenType.CHAR);
 			}
 
-			default: this.error(String.format("Unexpected char '%c'", c));
+			default: this.error("Unexpected char ''");
 		}
 
 		return null;
@@ -280,6 +315,7 @@ public class Scanner {
 			} catch (Error e) {
 				this.hadError = true;
 				e.printStackTrace();
+				break;
 			}
 		}
 
